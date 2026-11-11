@@ -47,6 +47,7 @@ import sys
 from datetime import datetime, timezone
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import boards as boards_conf  # noqa: E402
 import os_list  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
@@ -195,16 +196,8 @@ def and_list(items):
 # ---- upstream data ----
 
 def read_boards():
-    rows = []
-    for line in (UPSTREAM / "boards.conf").read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        parts = line.split(None, 5)
-        if len(parts) != 6:
-            sys.exit("boards.conf: cannot read %r" % line)
-        rows.append(tuple(parts))
-    return rows
+    path = UPSTREAM / "boards.conf"
+    return boards_conf.parse(path.read_text(encoding="utf-8"), "boards.conf")
 
 
 def read_releases():
@@ -222,7 +215,7 @@ def read_synced():
 # ---- generated pages ----
 
 def render_status(boards, catalogs):
-    releases = and_list(ubuntu(r) for r in dict.fromkeys(b[2] for b in boards))
+    releases = and_list(ubuntu(r) for r in dict.fromkeys(b["release"] for b in boards))
     if not catalogs:
         status = "Early. No images have been released yet; the first ones are being built."
     else:
@@ -237,7 +230,7 @@ def render_status(boards, catalogs):
         else:
             status = "Every image in the newest release has been tested on hardware."
     rows = [("Stage", esc(status)),
-            ("Boards", esc(and_list(dict.fromkeys(b[5] for b in boards)))),
+            ("Boards", esc(and_list(dict.fromkeys(b["name"] for b in boards)))),
             ("Ubuntu", esc(releases))]
     if catalogs:
         rel = catalogs[0]["release"]
@@ -323,11 +316,17 @@ def render_download(catalogs):
 
 
 def render_boards(boards):
+    # One table per board maker, in the order boards.conf first names them.
     short = {"hardware-tested": "Tested on hardware", "ci-only": "CI only"}
-    rows = [[esc(name), esc(soc.upper()), esc(branch), esc(ubuntu(release)),
-             esc(short.get(status, status))]
-            for _board, branch, release, status, soc, name in boards]
-    body = table("boards-table", ["Board", "SoC", "Kernel", "Ubuntu", "Status"], rows)
+    groups = []
+    for vendor in dict.fromkeys(b["vendor"] for b in boards):
+        rows = [[esc(b["name"]), esc(b["soc"].upper()), esc(b["branch"]),
+                 esc(ubuntu(b["release"])), esc(short.get(b["status"], b["status"]))]
+                for b in boards if b["vendor"] == vendor]
+        groups.append('<div class="pf-v6-c-content%s"><h3>%s</h3></div>\n%s' % (
+            " pf-v6-u-mt-lg" if groups else "", esc(vendor),
+            table("boards-table", ["Board", "SoC", "Kernel", "Ubuntu", "Status"], rows)))
+    body = "\n".join(groups)
     out = [card("boards", "Supported boards", body, rail="Supported boards")]
     out.append(card("booting", "Booting from an SD card", kv([
         ("Radxa ROCK 4D", "The board's boot ROM never boots from an SD card: it looks at "
@@ -736,6 +735,11 @@ def build():
         sys.exit("no cache/upstream/: run tools/fetch_upstream.py first")
     boards = read_boards()
     catalogs = read_releases()
+    # Catalogs written before images[].vendor existed: the maker is the first
+    # word of the board's name, as boards.conf's own fallback has it.
+    for c in catalogs:
+        for img in c["images"]:
+            img.setdefault("vendor", img["board_name"].split()[0])
     synced = read_synced()
     sample = sample_flag or any("_sample" in c for c in catalogs)
     out_dir = ROOT / ("output/sample-site" if sample else "_site")

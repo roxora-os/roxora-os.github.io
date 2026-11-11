@@ -638,6 +638,8 @@ code { font-family: var(--pf-t--global--font--family--mono); font-size: 0.9em; }
 .pf-v6-c-card .pf-v6-c-table { --pf-v6-c-table--cell--first-last-child--PaddingInline: 0; }
 @media (min-width: 48rem) {
   .boards-table .pf-v6-c-table__td { white-space: nowrap; }
+  /* One table per vendor; fixed layout keeps their columns lined up. */
+  .boards-table { table-layout: fixed; }
 }
 .doc-list { padding-inline-start: 1.25rem; }
 

@@ -41,6 +41,9 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import boards as boards_conf  # noqa: E402
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "cache" / "upstream"
 REPO = "roxora-os/build"
@@ -147,6 +150,11 @@ def main(argv):
                        if f["type"] == "file" and f["name"].endswith(".md"))
         for n in names:
             (OUT / "docs" / n).write_bytes(get(RAW + "docs/" + n))
+
+    # Read it now, so a malformed boards.conf fails the fetch with the line
+    # in question rather than surfacing later in the build.
+    boards = boards_conf.parse((OUT / "boards.conf").read_text(encoding="utf-8"))
+    print("boards.conf: %d boards, columns understood" % len(boards))
 
     if sample:
         cat = json.loads(sample.read_text(encoding="utf-8"))

@@ -71,9 +71,10 @@ def describe(release, img):
 
 
 def make(catalogs, boards, site):
-    """boards: (board, branch, release, status, soc, name) rows of boards.conf."""
+    """boards: rows of boards.conf as tools/boards.py reads them."""
     devices, tags = [], set()
-    for board, _branch, _rel, _status, soc, name in boards:
+    for row in boards:
+        board, soc, name = row["board"], row["soc"], row["name"]
         if board in tags:
             continue
         tags.add(board)
