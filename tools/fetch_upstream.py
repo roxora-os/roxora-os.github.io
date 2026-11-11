@@ -50,6 +50,8 @@ REPO = "roxora-os/build"
 API = "https://api.github.com/repos/" + REPO
 RAW = "https://raw.githubusercontent.com/%s/main/" % REPO
 CATALOG = "roxora-catalog.json"
+RELEASES = "https://github.com/%s/releases/" % REPO
+DOWNLOAD = RELEASES + "download/"
 
 
 def get(url, api=False):
@@ -94,6 +96,36 @@ def check_catalog(cat, where):
                 sys.exit("fetch_upstream: %s: images[%d].spi.%s missing" % (where, i, k))
 
 
+def trusted(cat, where):
+    """Keep only what downloads from this repository's own releases. The
+    website, the catalog copies under /catalog/ and the Raspberry Pi Imager
+    file all link what is kept here, so a catalog that names any other
+    address for a file must not get that address onto the site: the image is
+    left out (or its SPI image, or its verify output), and the build says so."""
+    def ok(url):
+        return isinstance(url, str) and url.startswith(DOWNLOAD)
+    if not (isinstance(cat["release"]["url"], str)
+            and cat["release"]["url"].startswith(RELEASES)):
+        print("note: %s: release.url is not a release of %s, replaced" % (where, REPO))
+        cat["release"]["url"] = RELEASES.rstrip("/")
+    kept = []
+    for img in cat.get("images", []):
+        if not ok(img["url"]):
+            print("note: %s: %s is not downloaded from %s, left out" % (where, img["file"], DOWNLOAD))
+            continue
+        if "spi" in img and not ok(img["spi"]["url"]):
+            print("note: %s: the SPI image of %s is not downloaded from %s, left out"
+                  % (where, img["file"], DOWNLOAD))
+            del img["spi"]
+        if "verify_url" in img and not ok(img["verify_url"]):
+            print("note: %s: the verify output of %s is not downloaded from %s, left out"
+                  % (where, img["file"], DOWNLOAD))
+            del img["verify_url"]
+        kept.append(img)
+    cat["images"] = kept
+    return cat
+
+
 def releases():
     out, page = [], 1
     while True:
@@ -111,6 +143,10 @@ def releases():
                 continue
             cat = get_json(asset["browser_download_url"])
             check_catalog(cat, rel["tag_name"])
+            cat = trusted(cat, rel["tag_name"])
+            if not cat["images"]:
+                print("note: %s has no image to list, skipped" % rel["tag_name"])
+                continue
             if "_sample" in cat:
                 sys.exit("fetch_upstream: %s: catalog is marked as sample data" % rel["tag_name"])
             # GitHub's flag is what a visitor sees on the release page, so it
@@ -159,6 +195,7 @@ def main(argv):
     if sample:
         cat = json.loads(sample.read_text(encoding="utf-8"))
         check_catalog(cat, str(sample))
+        cat = trusted(cat, str(sample))
         cats = [cat]
     else:
         cats = releases()
