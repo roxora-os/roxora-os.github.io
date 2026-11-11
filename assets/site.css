@@ -107,7 +107,9 @@ html.pf-v6-theme-dark .theme-toggle .icon-moon { display: none; }
    the 789px measure for the paragraph plus room for the status at its right.
    The overview is a dashboard and fills the screen. */
 .doc-page { --pf-v6-c-page--section--m-limit-width--MaxWidth: 76rem; }
-.doc-page .pf-v6-c-page__main-body:has(> .page-rail) { margin-inline: auto; }
+/* The column sits in the middle of the sheet on a wide screen, rail or no
+   rail, as mabc-ws's home page does. */
+.doc-page .pf-v6-c-page__main-section.pf-m-limit-width > .pf-v6-c-page__main-body { margin-inline: auto; }
 
 /* The first section sits 16px below the top of the sheet by default, which
    crowds the page title against the masthead. Give it room to breathe, and
@@ -240,32 +242,32 @@ html.pf-v6-theme-dark .theme-toggle .icon-moon { display: none; }
 a[href^="http"]:not(:where([href^="https://roxora-os.github.io"], .pf-v6-c-button, .pf-v6-c-nav__link))::after,
 .pf-v6-c-nav__link[href^="http"]:not([href^="https://roxora-os.github.io"]) .pf-v6-c-nav__link-text::after,
 a.pf-v6-c-button[href^="http"]:not([href^="https://roxora-os.github.io"]) .pf-v6-c-button__text::after {
-  content: "";
-  display: inline-block;
-  width: 0.72em;
-  height: 0.72em;
-  margin-inline-start: 0.3em;
-  vertical-align: -0.02em;
+  /* A word joiner as its content and inline rather than inline-block, so
+     the glyph never wraps onto a line of its own away from the link's last
+     word. The glyph is the mask, drawn at the end of the padding. */
+  content: "\2060";
+  display: inline;
+  padding-inline-start: 1.02em;
   background-color: currentColor;
   opacity: 0.75;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M30 21v7.5c0 .827-.673 1.5-1.5 1.5h-25c-.827 0-1.5-.673-1.5-1.5v-25C2 2.673 2.673 2 3.5 2H11a1 1 0 1 1 0 2H4v24h24v-7a1 1 0 1 1 2 0ZM28.5 2H18a1 1 0 1 0 0 2h8.586L13.293 17.293a.999.999 0 1 0 1.414 1.414L28 5.414V14a1 1 0 1 0 2 0V3.5c0-.827-.673-1.5-1.5-1.5Z'/%3E%3C/svg%3E") no-repeat center / contain;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M30 21v7.5c0 .827-.673 1.5-1.5 1.5h-25c-.827 0-1.5-.673-1.5-1.5v-25C2 2.673 2.673 2 3.5 2H11a1 1 0 1 1 0 2H4v24h24v-7a1 1 0 1 1 2 0ZM28.5 2H18a1 1 0 1 0 0 2h8.586L13.293 17.293a.999.999 0 1 0 1.414 1.414L28 5.414V14a1 1 0 1 0 2 0V3.5c0-.827-.673-1.5-1.5-1.5Z'/%3E%3C/svg%3E") no-repeat center / contain;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M30 21v7.5c0 .827-.673 1.5-1.5 1.5h-25c-.827 0-1.5-.673-1.5-1.5v-25C2 2.673 2.673 2 3.5 2H11a1 1 0 1 1 0 2H4v24h24v-7a1 1 0 1 1 2 0ZM28.5 2H18a1 1 0 1 0 0 2h8.586L13.293 17.293a.999.999 0 1 0 1.414 1.414L28 5.414V14a1 1 0 1 0 2 0V3.5c0-.827-.673-1.5-1.5-1.5Z'/%3E%3C/svg%3E") no-repeat right center / 0.72em 0.72em;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M30 21v7.5c0 .827-.673 1.5-1.5 1.5h-25c-.827 0-1.5-.673-1.5-1.5v-25C2 2.673 2.673 2 3.5 2H11a1 1 0 1 1 0 2H4v24h24v-7a1 1 0 1 1 2 0ZM28.5 2H18a1 1 0 1 0 0 2h8.586L13.293 17.293a.999.999 0 1 0 1.414 1.414L28 5.414V14a1 1 0 1 0 2 0V3.5c0-.827-.673-1.5-1.5-1.5Z'/%3E%3C/svg%3E") no-repeat right center / 0.72em 0.72em;
 }
 /* A mailto link leaves the page too, but for a compose window rather than a
    website, so it carries an envelope rather than the arrow: the same warning,
    the truthful symbol. */
 a[href^="mailto:"]:not(:where(.pf-v6-c-nav__link))::after,
 .pf-v6-c-nav__link[href^="mailto:"] .pf-v6-c-nav__link-text::after {
-  content: "";
-  display: inline-block;
-  width: 0.72em;
-  height: 0.72em;
-  margin-inline-start: 0.3em;
-  vertical-align: -0.02em;
+  /* A word joiner as its content and inline rather than inline-block, so
+     the glyph never wraps onto a line of its own away from the link's last
+     word. The glyph is the mask, drawn at the end of the padding. */
+  content: "\2060";
+  display: inline;
+  padding-inline-start: 1.02em;
   background-color: currentColor;
   opacity: 0.75;
-  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M29.5 5h-27C1.673 5 1 5.673 1 6.5v19c0 .827.673 1.5 1.5 1.5h27c.827 0 1.5-.673 1.5-1.5v-19c0-.827-.673-1.5-1.5-1.5ZM3 8.238 10.762 16 3 23.762V8.238Zm16.382 7.143h-.001v.001l-3.38 3.38-3.38-3.38v-.001h-.001L4.238 7h23.524l-8.38 8.381ZM12 17.238l3.027 3.027c.26.26.605.403.973.403s.713-.143.973-.403L20 17.238 27.762 25H4.238L12 17.238ZM21.238 16 29 8.238v15.524L21.238 16Z'/%3E%3C/svg%3E") no-repeat center / contain;
-  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M29.5 5h-27C1.673 5 1 5.673 1 6.5v19c0 .827.673 1.5 1.5 1.5h27c.827 0 1.5-.673 1.5-1.5v-19c0-.827-.673-1.5-1.5-1.5ZM3 8.238 10.762 16 3 23.762V8.238Zm16.382 7.143h-.001v.001l-3.38 3.38-3.38-3.38v-.001h-.001L4.238 7h23.524l-8.38 8.381ZM12 17.238l3.027 3.027c.26.26.605.403.973.403s.713-.143.973-.403L20 17.238 27.762 25H4.238L12 17.238ZM21.238 16 29 8.238v15.524L21.238 16Z'/%3E%3C/svg%3E") no-repeat center / contain;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M29.5 5h-27C1.673 5 1 5.673 1 6.5v19c0 .827.673 1.5 1.5 1.5h27c.827 0 1.5-.673 1.5-1.5v-19c0-.827-.673-1.5-1.5-1.5ZM3 8.238 10.762 16 3 23.762V8.238Zm16.382 7.143h-.001v.001l-3.38 3.38-3.38-3.38v-.001h-.001L4.238 7h23.524l-8.38 8.381ZM12 17.238l3.027 3.027c.26.26.605.403.973.403s.713-.143.973-.403L20 17.238 27.762 25H4.238L12 17.238ZM21.238 16 29 8.238v15.524L21.238 16Z'/%3E%3C/svg%3E") no-repeat right center / 0.72em 0.72em;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M29.5 5h-27C1.673 5 1 5.673 1 6.5v19c0 .827.673 1.5 1.5 1.5h27c.827 0 1.5-.673 1.5-1.5v-19c0-.827-.673-1.5-1.5-1.5ZM3 8.238 10.762 16 3 23.762V8.238Zm16.382 7.143h-.001v.001l-3.38 3.38-3.38-3.38v-.001h-.001L4.238 7h23.524l-8.38 8.381ZM12 17.238l3.027 3.027c.26.26.605.403.973.403s.713-.143.973-.403L20 17.238 27.762 25H4.238L12 17.238ZM21.238 16 29 8.238v15.524L21.238 16Z'/%3E%3C/svg%3E") no-repeat right center / 0.72em 0.72em;
 }
 
 /* In the sidebar the markers line up down the right edge rather than trailing
@@ -478,38 +480,83 @@ a[href^="mailto:"]:not(:where(.pf-v6-c-nav__link))::after,
 .section { margin-top: var(--pf-t--global--spacer--gap--group-to-group--vertical--default); }
 
 /* ---- footer ----
-   The link columns and the copyright row, as patternfly.org lays them out: a
-   grid inside the footer's own page section, and the copyright on a section of
-   its own below it. */
+   The link columns and the copyright row, as gahingwoo.com lays them out: a
+   grid inside the footer's own page section on the secondary surface, and
+   the copyright on a section of its own below it. */
+.site-footer, .foot-legal {
+  background: var(--pf-t--global--background--color--secondary--default);
+  font-size: var(--pf-t--global--font--size--body--sm);
+  color: var(--pf-t--global--text--color--subtle);
+}
+.site-footer { padding-block-start: var(--pf-t--global--spacer--2xl); }
+.foot-legal { padding-block-start: 0; }
 .foot-title {
   font-family: var(--pf-t--global--font--family--heading);
   font-weight: 500;
+  color: var(--pf-t--global--text--color--regular);
   margin: 0 0 var(--pf-t--global--spacer--sm) 0;
 }
-/* The footer does not colour its links. PatternFly's default link decoration
-   is a dashed underline, which reads as a quiet dotted rule on the footer's
-   own text colour and as noise on brand blue. The reference site makes the
-   same choice. */
-.site-footer a, .foot-legal a { color: inherit; }
 .site-footer nav { display: flex; flex-direction: column; gap: var(--pf-t--global--spacer--xs); }
-/* A footer link is navigation, like the sidebar's, so it does not carry the
-   leaves-the-site glyph that a citation in the content does. */
+/* The footer does not colour its links, and a footer link is navigation
+   rather than a citation, so it carries neither the link colour nor the
+   leaves-the-site glyph that a reference in the content does. */
+.site-footer a, .foot-legal a { color: inherit; }
 .site-footer a::after, .foot-legal a::after { content: none !important; }
-/* The footer sits on the secondary surface, so it reads as the end of the page
-   rather than more content. */
-.site-footer, .foot-legal { background: var(--pf-t--global--background--color--secondary--default); }
-.foot-about { color: var(--pf-t--global--text--color--subtle); margin: 0 0 var(--pf-t--global--spacer--md) 0; }
-.site-footer address { font-style: normal; line-height: 1.9; color: var(--pf-t--global--text--color--subtle); }
+.foot-about { margin: var(--pf-t--global--spacer--sm) 0 var(--pf-t--global--spacer--md) 0; }
+/* The address runs at the same line height as the line above it. */
+.site-footer address { font-style: normal; }
 .foot-legal .pf-v6-c-page__main-body {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   gap: var(--pf-t--global--spacer--xs) var(--pf-t--global--spacer--lg);
   padding-block-start: var(--pf-t--global--spacer--md);
+}
+/* The rule belongs to the columns of links, not to the identity block on
+   the right, so from lg it stops a quarter of a gutter before the fourth
+   column, as on gahingwoo.com. Below lg it spans the width. */
+.foot-legal .pf-v6-c-page__main-body::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 100%;
   border-block-start: 1px solid var(--pf-t--global--border--color--default);
-  font-size: var(--pf-t--global--font--size--body--sm);
-  color: var(--pf-t--global--text--color--subtle);
+}
+@media (min-width: 62rem) {
+  .foot-legal .pf-v6-c-page__main-body::before {
+    inline-size: calc(75% - 0.25 * var(--pf-t--global--spacer--md));
+  }
 }
 
+/* The content panel runs the full height of the window and the footer sits
+   at its foot, however short the page. PatternFly starts the panel at the
+   top and lets it end where its content ends (align-self: start), which on
+   a short page left the footer floating halfway up with bare page below. */
+.pf-v6-c-page {
+  --pf-v6-c-page__main-container--AlignSelf: stretch;
+  /* The sheet is the first section rather than the panel behind it, so it
+     can end in rounded corners above the footer. */
+  --pf-v6-c-page__main-container--BackgroundColor: transparent;
+}
+.pf-v6-c-page__main-container > .pf-v6-c-page__main { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.pf-v6-c-page__main > .pf-v6-c-page__main-section { flex-shrink: 0; }
+.pf-v6-c-page__main > .pf-v6-c-page__main-section:first-child {
+  flex-grow: 1;
+  /* The sheet ends with the panel's own rounded corners, and the footer
+     lies on the page ground below it. */
+  border-end-start-radius: var(--pf-v6-c-page__main-container--BorderRadius);
+  border-end-end-radius: var(--pf-v6-c-page__main-container--BorderRadius);
+}
+/* The panel's 4px border is drawn in the primary surface colour, so around
+   the footer's secondary surface it showed as a frame, plainly so in the
+   dark theme. Without it the footer is the page ground from edge to edge. */
+.pf-v6-c-page {
+  --pf-v6-c-page__main-container--BorderBlockStartWidth: 0px;
+  --pf-v6-c-page__main-container--BorderBlockEndWidth: 0px;
+  --pf-v6-c-page__main-container--BorderInlineStartWidth: 0px;
+  --pf-v6-c-page__main-container--BorderInlineEndWidth: 0px;
+}
 
 /* Back to top: PatternFly positions this inside a scrolling container; the
    page scrolls as a document, so it is fixed to the viewport instead, at the

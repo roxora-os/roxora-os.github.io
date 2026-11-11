@@ -88,9 +88,26 @@ UBUNTU = {"jammy": ("22.04", True), "noble": ("24.04", True),
           "plucky": ("25.04", False), "questing": ("25.10", False),
           "resolute": ("26.04", True)}
 
+# The footer's own columns, as gahingwoo.com has them. A page not built is
+# left out.
+FOOTER_PAGES = [("Home", "/"), ("Download", "/download/"), ("Boards", "/boards/"),
+                ("Raspberry Pi Imager", "/rpi-imager/"), ("About", "/about/")]
+FOOTER_DOCS = [("Installing Roxora", "/docs/install/"), ("All documents", "/docs/"),
+               ("FAQ", "/faq/")]
+# The pages the 404 page lists: title, address, what is there.
+SITE_PAGES = [
+    ("Home", "/", "What Roxora is, and how far along it is."),
+    ("Download", "/download/", "The newest images, with sizes and checksums."),
+    ("Boards", "/boards/", "The supported boards and their test status."),
+    ("Raspberry Pi Imager", "/rpi-imager/", "Writing Roxora with Raspberry Pi Imager."),
+    ("Docs", "/docs/", "Installing, testing, and how Roxora is built."),
+    ("FAQ", "/faq/", "Questions people ask about Roxora."),
+    ("About", "/about/", "Who makes Roxora and how to reach them."),
+]
+
 # Sidebar navigation. Section title, then (label, href) per item.
 NAV = [
-    ("Roxora", [
+    ("Pages", [
         ("Home", "/"),
         ("Download", "/download/"),
         ("Boards", "/boards/"),
@@ -754,8 +771,7 @@ SHELL = """<!DOCTYPE html>
       <button class="pf-v6-c-button pf-m-plain theme-toggle" id="theme-toggle" type="button" aria-label="Toggle light and dark theme">
         <span class="pf-v6-c-button__icon"><svg class="pf-v6-svg icon-moon" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" role="img" width="1em" height="1em"><path d="M10.6 2a8 8 0 1 0 7.4 11 6.6 6.6 0 0 1-7.4-11Z"/></svg><svg class="pf-v6-svg icon-sun" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" role="img" width="1em" height="1em"><circle cx="10" cy="10" r="3.6"/><path d="M10 1.5v2.2M10 16.3v2.2M1.5 10h2.2M16.3 10h2.2M4 4l1.6 1.6M14.4 14.4 16 16M4 16l1.6-1.6M14.4 5.6 16 4"/></svg></span>
       </button>
-      <a class="pf-v6-c-button pf-m-primary masthead-give" href="/download/"><span class="pf-v6-c-button__text">Download</span></a>
-    </div>
+%(download_btn)s    </div>
   </header>
   <div class="pf-v6-c-backdrop site-backdrop" id="site-backdrop" hidden></div>
   <aside class="pf-v6-c-page__sidebar" id="site-sidebar">
@@ -781,7 +797,19 @@ SHELL = """<!DOCTYPE html>
       <footer class="pf-v6-c-page__main-section site-footer">
         <div class="pf-v6-c-page__main-body">
           <div class="pf-v6-l-grid pf-m-gutter">
-            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-9-col-on-lg">
+            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
+              <p class="foot-title">Pages</p>
+              <nav aria-label="Pages">
+%(foot_pages)s
+              </nav>
+            </div>
+            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
+              <p class="foot-title">Documentation</p>
+              <nav aria-label="Documentation">
+%(foot_docs)s
+              </nav>
+            </div>
+            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
               <p class="foot-title">Elsewhere</p>
               <nav aria-label="Elsewhere">
                 <a href="%(build_repo)s">Build repository</a>
@@ -790,24 +818,24 @@ SHELL = """<!DOCTYPE html>
                 <a href="https://github.com/roxora-os/design">Logo files</a>
               </nav>
             </div>
-            <div class="pf-v6-l-grid__item pf-m-12-col-on-sm pf-m-3-col-on-lg">
+            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
               <span class="brand foot-brand">
                 <img class="pf-v6-c-brand brand-mark" src="/assets/brand/roxora-mark.svg" width="120" height="120" alt="" loading="lazy">
                 <span class="brand-name wordmark">roxora</span>
               </span>
-              <p class="foot-about">%(tagline)s</p>
+              <p class="foot-about">%(tagline)s Roxora is an independent project, not affiliated with Canonical, Armbian or Rockchip.</p>
               <address>
                 <a href="mailto:%(email)s">%(email)s</a><br>
-                Report problems with a Roxora image on <a href="%(build_repo)s/issues">roxora-os/build</a>, including kernel and board problems. Report a problem to Armbian only if it also happens on an official Armbian image.
+                Report problems with an image on <a href="%(build_repo)s/issues" class="nowrap">roxora-os/build</a>.
               </address>
             </div>
           </div>
         </div>
       </footer>
 
-      <section class="pf-v6-c-page__main-section pf-m-no-fill foot-legal">
+      <section class="pf-v6-c-page__main-section pf-m-no-fill foot-legal" aria-label="Site information">
         <div class="pf-v6-c-page__main-body">
-          <span>Copyright &copy; <span id="year">%(year)s</span> %(author)s. Roxora is an independent project, not affiliated with Canonical, Armbian or Rockchip. The code behind this site is licensed under <a href="%(source)s/blob/main/LICENSE">GPL-2.0</a>.</span>
+          <span>Copyright &copy; <span id="year">%(year)s</span> %(author)s</span>
           <span><a href="%(source)s">View page source</a></span>
           <span><button class="link-button" type="button" id="about-page-open">About this site</button></span>
           <span><a href="mailto:%(email)s">Contact</a></span>
@@ -1024,7 +1052,12 @@ def build():
             head=page_head(heading, subtitle, action),
             nav=render_nav(current, have), rail=render_rail(rail),
             railcls=" with-rail" if rail else "",
-            content=body)
+            content=nobreak(body),
+            download_btn="" if directory == "download" else (
+                '      <a class="pf-v6-c-button pf-m-primary masthead-give" href="/download/">'
+                '<span class="pf-v6-c-button__text">Download</span></a>\n'),
+            foot_pages=foot_links([(label, href) for label, href in FOOTER_PAGES if href in have]),
+            foot_docs=foot_links([(label, href) for label, href in FOOTER_DOCS if href in have]))
         # The og:image is an absolute URL on this site; stamp it too.
         out = ASSET.sub(stamp, out)
         return href, out
@@ -1038,12 +1071,15 @@ def build():
         target.write_text(out, encoding="utf-8")
         written.append(href)
 
-    _, out = render("404", None, "Page not found", None, "This page does not exist.", None,
-                    '<div class="pf-v6-c-card" style="max-width: 40rem">\n'
+    _, out = render("404", None, "Page not found", "No page at this address",
+                    "This page does not exist.", None,
+                    '<div class="pf-v6-c-card not-found">\n'
                     '  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">'
-                    "<p>The link may be old, or the address mistyped. The pages of this "
-                    "site are listed in the navigation; the %s holds everything else.</p>"
-                    "</div></div>\n</div>" % link(BUILD_REPO, "build repository"))
+                    "<p>The link may be old, or the address mistyped. These are the pages "
+                    "of this site; the %s holds everything else.</p></div>\n"
+                    '<div class="pf-v6-u-mt-lg">%s</div></div>\n</div>'
+                    % (link(BUILD_REPO, "build repository"),
+                       link_list([row for row in SITE_PAGES if row[1] in have])))
     (out_dir / "404.html").write_text(out, encoding="utf-8")
 
     # The catalogs, at stable addresses on this site. A release asset on
