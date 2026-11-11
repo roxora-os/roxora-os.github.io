@@ -13,7 +13,8 @@
  * this program; if not, see <https://www.gnu.org/licenses/>.
  */
 // Shared behaviour: theme toggle, sidebar, the section-in-view marker on the
-// rail, and back to top. Adapted from mabc-ws and gahingwoo.com, which run the same shell.
+// rail, search, the About dialog and back to top. Copied from mabc-ws, which
+// adapts gahingwoo.com, which runs the same shell.
 
 (function () {
   var root = document.documentElement;
@@ -68,8 +69,8 @@
     });
   }
 
-  // Print is always the light theme: drop the dark class while printing and
-  // put it back after.
+  // Print (and the CV PDF, which is printed by headless Chrome) is always the
+  // light theme: drop the dark class while printing and put it back after.
   var wasDark = false;
   window.addEventListener('beforeprint', function () {
     wasDark = root.classList.contains('pf-v6-theme-dark');
@@ -213,6 +214,233 @@
     });
     window.addEventListener('resize', spy, { passive: true });
     spy();
+  }
+
+  // The year in the footer, so a page served next January is not stale.
+  var year = document.getElementById('year');
+  if (year) year.textContent = String(new Date().getFullYear());
+
+  // Search. The index is generated from the pages and fetched the first time
+  // the box is used, so it costs nothing to a reader who never searches.
+  var searchInput = document.getElementById('search-input');
+  if (searchInput) {
+    var panel = document.getElementById('search-results');
+    var list = document.getElementById('search-list');
+    var group = document.getElementById('site-search');
+    var openBtn = document.getElementById('search-open');
+    var closeBtn = document.getElementById('search-close');
+    var index = null, loading = null, active = -1, results = [];
+
+    function load() {
+      if (index) return Promise.resolve(index);
+      if (!loading) {
+        loading = fetch(searchInput.dataset.index)
+          .then(function (r) { return r.ok ? r.json() : []; })
+          .then(function (data) { index = data; return index; })
+          .catch(function () { index = []; return index; });
+      }
+      return loading;
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    // Wrap each occurrence of a token in <mark>, on already-escaped text.
+    function highlight(text, tokens) {
+      var out = escapeHtml(text);
+      tokens.forEach(function (tok) {
+        var re = new RegExp('(' + tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'gi');
+        out = out.replace(re, '<mark>$1</mark>');
+      });
+      return out;
+    }
+
+    function snippetFor(text, tokens) {
+      var lower = text.toLowerCase(), at = -1;
+      for (var i = 0; i < tokens.length && at < 0; i++) at = lower.indexOf(tokens[i]);
+      if (at < 0) at = 0;
+      var start = Math.max(0, at - 50);
+      var cut = text.slice(start, start + 150);
+      return (start > 0 ? '\u2026' : '') + cut + (start + 150 < text.length ? '\u2026' : '');
+    }
+
+    function rank(rec, tokens, q) {
+      var title = rec.t.toLowerCase(), body = (rec.x || '').toLowerCase(), page = rec.p.toLowerCase();
+      for (var i = 0; i < tokens.length; i++) {
+        if (title.indexOf(tokens[i]) < 0 && body.indexOf(tokens[i]) < 0 && page.indexOf(tokens[i]) < 0) return -1;
+      }
+      var score = 0;
+      if (title.indexOf(q) === 0) score += 100;
+      else if (title.indexOf(q) >= 0) score += 60;
+      tokens.forEach(function (t) { if (title.indexOf(t) >= 0) score += 10; });
+      return score;
+    }
+
+    function render(q) {
+      var tokens = q.toLowerCase().split(/\s+/).filter(Boolean);
+      results = (index || []).map(function (rec) { return { rec: rec, score: rank(rec, tokens, q.toLowerCase()) }; })
+        .filter(function (r) { return r.score >= 0; })
+        .sort(function (a, b) { return b.score - a.score; })
+        .slice(0, 8)
+        .map(function (r) { return r.rec; });
+      active = -1;
+      list.innerHTML = '';
+      if (!results.length) {
+        list.innerHTML = '<li class="search-empty" role="presentation">No match for &ldquo;' + escapeHtml(q) + '&rdquo;</li>';
+      } else {
+        results.forEach(function (rec, i) {
+          var li = document.createElement('li');
+          li.className = 'pf-v6-c-menu__list-item';
+          li.setAttribute('role', 'none');
+          li.innerHTML = '<a class="pf-v6-c-menu__item" href="' + rec.u + '" role="option" id="search-opt-' + i + '">' +
+            '<span class="pf-v6-c-menu__item-main"><span class="pf-v6-c-menu__item-text">' +
+            highlight(rec.t, tokens) +
+            '<span class="search-result-page">' + escapeHtml(rec.p) + '</span>' +
+            '<span class="search-result-snippet">' + highlight(snippetFor(rec.x || '', tokens), tokens) + '</span>' +
+            '</span></span></a>';
+          list.appendChild(li);
+        });
+      }
+      open(true);
+    }
+
+    function open(show) {
+      panel.hidden = !show;
+      searchInput.setAttribute('aria-expanded', show ? 'true' : 'false');
+      if (!show) { active = -1; searchInput.removeAttribute('aria-activedescendant'); }
+    }
+
+    function setActive(i) {
+      var opts = list.querySelectorAll('.pf-v6-c-menu__item');
+      if (!opts.length) return;
+      active = (i + opts.length) % opts.length;
+      Array.prototype.forEach.call(opts, function (a, n) {
+        a.classList.toggle('pf-m-focus', n === active);
+        if (n === active) { a.scrollIntoView({ block: 'nearest' }); searchInput.setAttribute('aria-activedescendant', a.id); }
+      });
+    }
+
+    function expand(show) {
+      group.classList.toggle('pf-m-expanded', show);
+      openBtn.setAttribute('aria-expanded', show ? 'true' : 'false');
+      if (show) searchInput.focus();
+      else { searchInput.value = ''; open(false); }
+    }
+
+    function run() {
+      var q = searchInput.value.trim();
+      if (q.length < 2) { open(false); return; }
+      load().then(function () { if (searchInput.value.trim() === q) render(q); });
+    }
+
+    searchInput.addEventListener('input', run);
+    searchInput.addEventListener('focus', function () { if (searchInput.value.trim().length >= 2) run(); });
+    searchInput.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); if (panel.hidden) run(); else setActive(active + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(active - 1); }
+      else if (e.key === 'Enter') {
+        var opts = list.querySelectorAll('.pf-v6-c-menu__item');
+        if (opts.length) { e.preventDefault(); (opts[active >= 0 ? active : 0]).click(); }
+      } else if (e.key === 'Escape') { if (!panel.hidden) open(false); else { expand(false); openBtn.focus(); } }
+    });
+    openBtn.addEventListener('click', function () { expand(true); });
+    closeBtn.addEventListener('click', function () { expand(false); openBtn.focus(); });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.site-search') && !e.target.closest('.search-results')) {
+        open(false);
+        if (!searchInput.value.trim()) expand(false);
+      }
+    });
+    list.addEventListener('click', function () { open(false); expand(false); });
+  }
+
+  // Dialogs. The about box is a modal dialog, and
+  // the accessibility guidance for them asks for the same four things beyond
+  // showing the box: focus moves inside, Tab stays inside, Escape closes, and
+  // whatever opened it gets focus back. Everything that is not the dialog is
+  // switched off with inert while it is open, so a screen reader cannot wander
+  // into the page behind it; where inert is missing, aria-hidden still hides
+  // the background and the Tab handler keeps the keyboard in.
+  function makeDialog(root, opts) {
+    opts = opts || {};
+    var opener = null;
+
+    var siblings = Array.prototype.filter.call(document.body.children, function (el) {
+      return el !== root && el.tagName !== 'SCRIPT';
+    });
+    var background = function (off) {
+      siblings.forEach(function (el) {
+        if ('inert' in HTMLElement.prototype) el.inert = off;
+        if (off) el.setAttribute('aria-hidden', 'true');
+        else el.removeAttribute('aria-hidden');
+      });
+    };
+    var focusable = function () {
+      return Array.prototype.filter.call(
+        root.querySelectorAll('a[href], button:not([disabled]), iframe'),
+        function (el) { return el.offsetParent !== null; });
+    };
+
+    // A dialog fades, as the drawer's backdrop does. [hidden] comes off and
+    // it is laid out at no opacity before the class that fades it in goes on;
+    // going, the class comes off first and [hidden] goes back only once the
+    // fade has run. Toggling [hidden] alone snapped it open and shut.
+    root.classList.add('site-dialog');
+    var api = {
+      open: function (from) {
+        opener = from || document.activeElement;
+        root.hidden = false;
+        void root.offsetHeight;
+        root.classList.add('is-open');
+        background(true);
+        var first = focusable()[0];
+        if (first) first.focus();
+      },
+      close: function () {
+        if (!root.classList.contains('is-open')) return;
+        root.classList.remove('is-open');
+        background(false);
+        if (opener && opener.focus) opener.focus();
+        opener = null;
+        window.setTimeout(function () {
+          if (root.classList.contains('is-open')) return;
+          root.hidden = true;
+          // After the fade, so the sermon frame is not emptied while it is
+          // still on screen. Emptying it is what stops the sound, so a
+          // service plays on for the fifth of a second the fade takes.
+          if (opts.onClose) opts.onClose();
+        }, 250);
+      },
+      isOpen: function () { return root.classList.contains('is-open'); }
+    };
+
+    // A click on the backdrop itself, not on the box sitting on top of it.
+    root.addEventListener('click', function (e) { if (e.target === root) api.close(); });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-dialog-close]'), function (b) {
+      b.addEventListener('click', api.close);
+    });
+    document.addEventListener('keydown', function (e) {
+      if (!api.isOpen()) return;
+      if (e.key === 'Escape') { api.close(); return; }
+      if (e.key !== 'Tab') return;
+      var items = focusable();
+      if (!items.length) return;
+      var first = items[0], last = items[items.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    });
+    return api;
+  }
+
+  // About this site, opened from the footer.
+  var about = document.getElementById('about-page');
+  var aboutOpen = document.getElementById('about-page-open');
+  if (about && aboutOpen) {
+    var aboutDialog = makeDialog(about);
+    aboutOpen.addEventListener('click', function () { aboutDialog.open(aboutOpen); });
   }
 
   // Back to top.
