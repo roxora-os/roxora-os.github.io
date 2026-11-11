@@ -229,9 +229,7 @@ def size(n):
 
 
 def board_status(status):
-    return {"hardware-tested": "Tested on hardware",
-            "ci-only": "CI only: builds and passes the image checks, not yet booted on hardware"
-            }.get(status, status)
+    return {"hardware-tested": "Tested on hardware", "ci-only": "CI only"}.get(status, status)
 
 
 def and_list(items):
@@ -253,11 +251,13 @@ def read_releases():
 
 
 def read_synced():
-    """When fetch_upstream.py read GitHub, as the line Download and Boards
-    show so that a stale page says so."""
+    """When fetch_upstream.py read GitHub, for the subtitles of Download and
+    Boards, so that a stale page says so."""
     f = UPSTREAM / "synced.json"
-    when = json.loads(f.read_text(encoding="utf-8"))["synced"] if f.is_file() else None
-    return ('<p class="synced">Synced from GitHub at %s UTC</p>' % esc(when)) if when else ""
+    if not f.is_file():
+        return None
+    when = datetime.strptime(json.loads(f.read_text(encoding="utf-8"))["synced"], "%Y-%m-%d %H:%M")
+    return "synced %d %s, %s UTC" % (when.day, when.strftime("%B %Y"), when.strftime("%H:%M"))
 
 
 # ---- generated pages ----
@@ -300,15 +300,21 @@ def render_download(catalogs):
     newest = catalogs[0]
     rel = newest["release"]
     if rel["prerelease"]:
-        state = ("Pre-release. The images are built and checked in CI. A release "
-                 "stays a pre-release until every image in it has been tested on hardware.")
+        state = ("Pre-release. Images marked CI only build and pass the image checks in "
+                 "CI but have not been booted on hardware yet. A release stays a "
+                 "pre-release until every image in it has been tested on hardware.")
     else:
         state = "Release. Every image in it has been tested on hardware."
     out = [card("release", "Roxora %s" % rel["version"], kv([
         ("Released", esc(rel["date"])),
         ("Status", esc(state)),
-        ("Release notes", link(rel["url"], rel["url"].replace("https://", ""))),
-    ]), rail="Release")]
+        ("Release notes", link(rel["url"], "Release notes")),
+        ("Catalog", '%s<span class="meta">The files of this release with their sizes and '
+         'checksums, in the format of the %s.</span>' % (
+             link("/catalog/%s.json" % rel["tag"], "roxora-catalog.json"),
+             link("/docs/release-contract/", "release contract"))),
+    ] + ([("How to install", link("/docs/install/", "Installing Roxora"))]
+         if (UPSTREAM / "docs" / "install.md").is_file() else [])), rail="Release")]
 
     for img in newest["images"]:
         rows = [
@@ -321,7 +327,7 @@ def render_download(catalogs):
             ("Status", esc(board_status(img["status"]))),
         ]
         if img.get("verify_url"):
-            rows.append(("Image checks", link(img["verify_url"], "verify output")))
+            rows.append(("Image checks", link(img["verify_url"], "Verify output")))
         spi = img.get("spi")
         if spi:
             # The ROCK 4D's boot ROM does not boot from a card, so its release
@@ -936,6 +942,7 @@ def build():
     generated = {
         "{{status}}": render_status(boards, catalogs),
         "{{os-list-url}}": esc(OS_LIST_URL),
+        "{{board-names}}": esc(and_list(dict.fromkeys(b["name"] for b in boards))),
     }
 
     # (output dir, nav item, heading, subtitle, description, page head action, body)
@@ -952,14 +959,18 @@ def build():
 
     pages.append(("", "/", NAME, "Plain Ubuntu for Rockchip boards", TAGLINE,
                   None, fragment("index")))
+    def with_synced(subtitle):
+        return "%s, %s" % (subtitle, synced) if synced else subtitle
+
     pages.append(("download", "/download/", "Download",
-                  "Roxora %s" % catalogs[0]["release"]["version"] if catalogs else "No releases yet",
+                  with_synced("Roxora %s" % catalogs[0]["release"]["version"]
+                              if catalogs else "No releases yet"),
                   "Download Roxora images, with their sizes, checksums and test status.",
                   ("All releases", BUILD_REPO + "/releases"),
-                  render_download(catalogs) + "\n" + synced))
-    pages.append(("boards", "/boards/", "Boards", "%d supported" % len(boards),
+                  render_download(catalogs)))
+    pages.append(("boards", "/boards/", "Boards", with_synced("%d supported" % len(boards)),
                   "The boards Roxora builds images for, with kernel branch, Ubuntu "
-                  "release and test status.", None, render_boards(boards) + "\n" + synced))
+                  "release and test status.", None, render_boards(boards)))
     pages.append(("rpi-imager", "/rpi-imager/", "Raspberry Pi Imager", "Writing Roxora with Imager",
                   "How to point Raspberry Pi Imager at the Roxora repository file to write "
                   "Roxora images.", None, fragment("rpi-imager")))
