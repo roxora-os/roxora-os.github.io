@@ -1,2 +1,3 @@
 @patternfly/patternfly 6.7.0
-components: Page/page Masthead/masthead Button/button Card/card Backdrop/backdrop             DescriptionList/description-list Table/table Table/table-grid             Nav/nav BackToTop/back-to-top             SkipToContent/skip-to-content JumpLinks/jump-links             Brand/brand Content/content EmptyState/empty-state CodeBlock/code-block
+components: Page/page Masthead/masthead Button/button Card/card Backdrop/backdrop             DescriptionList/description-list Table/table Table/table-grid             Nav/nav BackToTop/back-to-top             SkipToContent/skip-to-content JumpLinks/jump-links             Brand/brand Content/content Title/title EmptyState/empty-state CodeBlock/code-block             InputGroup/input-group TextInputGroup/text-input-group Menu/menu             AboutModalBox/about-modal-box
+layouts: Grid/grid Bullseye/bullseye

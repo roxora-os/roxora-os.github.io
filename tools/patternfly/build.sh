@@ -30,7 +30,10 @@ COMPONENTS="Page/page Masthead/masthead Button/button Card/card Backdrop/backdro
             DescriptionList/description-list Table/table Table/table-grid \
             Nav/nav BackToTop/back-to-top \
             SkipToContent/skip-to-content JumpLinks/jump-links \
-            Brand/brand Content/content EmptyState/empty-state CodeBlock/code-block"
+            Brand/brand Content/content Title/title EmptyState/empty-state CodeBlock/code-block \
+            InputGroup/input-group TextInputGroup/text-input-group Menu/menu \
+            AboutModalBox/about-modal-box"
+LAYOUTS="Grid/grid Bullseye/bullseye"
 
 OUT=assets/patternfly
 WORK=$(mktemp -d)
@@ -44,6 +47,7 @@ mkdir -p "$OUT"
   echo "/* Built by tools/patternfly/build.sh from @patternfly/patternfly $(node -p "require('$PKG/package.json').version"). Do not edit. */"
   cat "$PKG/patternfly-base.css"
   for c in $COMPONENTS; do cat "$PKG/components/$c.css"; done
+  for l in $LAYOUTS; do cat "$PKG/layouts/$l.css"; done
 } > "$OUT/patternfly-site.css"
 
 # PatternFly's own @font-face rules resolve relative to the stylesheet, so the
@@ -53,7 +57,14 @@ for d in RedHatDisplay RedHatText RedHatMono; do
   cp "$PKG/assets/fonts/$d/"*VF.woff2 "$PKG/assets/fonts/$d/"*VF-Italic.woff2 "$OUT/assets/fonts/$d/"
 done
 
+# The about modal's background pattern, which PatternFly points its
+# --BackgroundImage variable at. Same reasoning as the fonts: it is addressed
+# from inside the stylesheet, so it goes where the stylesheet expects it.
+mkdir -p "$OUT/assets/images"
+cp "$PKG/assets/images/pf-background.svg" "$OUT/assets/images/"
+
 node -p "'@patternfly/patternfly ' + require('$PKG/package.json').version" > "$OUT/VERSION"
 echo "components: $COMPONENTS" >> "$OUT/VERSION"
+echo "layouts: $LAYOUTS" >> "$OUT/VERSION"
 
 wc -c "$OUT/patternfly-site.css"
