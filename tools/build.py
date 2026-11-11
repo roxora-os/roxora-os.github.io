@@ -643,7 +643,7 @@ SHELL = """<!DOCTYPE html>
               <p class="foot-about">%(tagline)s</p>
               <address>
                 <a href="mailto:%(email)s">%(email)s</a><br>
-                Issues and pull requests go to the build repository.
+                Report problems with a Roxora image on <a href="%(build_repo)s/issues">roxora-os/build</a>, including kernel and board problems. Report a problem to Armbian only if it also happens on an official Armbian image.
               </address>
             </div>
           </div>
