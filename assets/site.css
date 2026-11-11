@@ -423,7 +423,12 @@ a[href^="mailto:"]:not(:where(.pf-v6-c-nav__link))::after,
     overflow-y: auto;
   }
 }
-.card-text, .kv .pf-v6-c-description-list__description { max-width: 789px; }
+/* Prose stops at 789px, as on gahingwoo.com's evidence page; tables and
+   code blocks in the same card take the card's full width. */
+.card-text, .kv .pf-v6-c-description-list__description,
+.pf-v6-c-card__body .pf-v6-c-content > :is(p, h3, h4, blockquote),
+.pf-v6-c-card__body .pf-v6-c-content > :is(ul, ol):not(:has(.pf-v6-c-code-block)),
+.pf-v6-c-card__body .pf-v6-c-content li > p { max-width: 789px; }
 
 /* ---- page head: title, inline subtitle, one action ---- */
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--pf-t--global--spacer--md); flex-wrap: wrap; margin-bottom: var(--pf-t--global--spacer--xl); }
@@ -623,25 +628,52 @@ html.pf-v6-theme-dark .credit-badge__label { fill: var(--pf-t--global--text--col
 
 /* A checksum is one unbroken run of 64 characters; it breaks anywhere rather
    than widening a phone screen. Inline code takes PatternFly's mono face. */
-code { font-family: var(--pf-t--global--font--family--mono); font-size: 0.9em; }
+code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--family--mono); font-size: 0.875em; }
 .hash { overflow-wrap: anywhere; word-break: break-all; }
 .pf-v6-c-content code { overflow-wrap: anywhere; }
-.pf-v6-c-code-block { margin-block: var(--pf-t--global--spacer--sm); }
-.pf-v6-c-code-block__code { overflow-wrap: anywhere; white-space: pre-wrap; }
+/* A code block never wraps a command in the middle: a long line scrolls
+   sideways inside the block instead. */
+.pf-v6-c-code-block {
+  margin-block: var(--pf-t--global--spacer--md);
+  /* PatternFly sets code blocks in its xs size, 12px, two steps under the
+     14px of inline code beside them; both take the body size here. */
+  --pf-v6-c-code-block__pre--FontSize: var(--pf-t--global--font--size--body--default);
+}
+.pf-v6-c-code-block__pre { overflow-x: auto; }
+.pf-v6-c-code-block__code { white-space: pre; overflow-wrap: normal; }
 
-/* Tables from the docs keep their columns and scroll sideways on a phone
-   instead of squeezing every cell. */
-.table-scroll { overflow-x: auto; margin-block-end: var(--pf-t--global--spacer--md); }
 .pf-v6-c-card .pf-v6-c-table { --pf-v6-c-table--BackgroundColor: transparent; }
 /* The table's own cell padding steps in from the card's edge; the first and
-   last columns line up with the card's text instead. */
-.pf-v6-c-card .pf-v6-c-table { --pf-v6-c-table--cell--first-last-child--PaddingInline: 0; }
+   last columns line up with the card's text instead. Stacked below md, each
+   row is inset by the page-chrome spacer, which inside a card pushes the
+   values 24px in from the heading above them; the card already insets them. */
+.pf-v6-c-card .pf-v6-c-table {
+  --pf-v6-c-table--cell--first-last-child--PaddingInline: 0;
+  --pf-v6-c-table__tr--responsive--PaddingInlineStart: 0px;
+  --pf-v6-c-table__tr--responsive--PaddingInlineEnd: 0px;
+}
 @media (min-width: 48rem) {
   .boards-table .pf-v6-c-table__td { white-space: nowrap; }
-  /* One table per vendor; fixed layout keeps their columns lined up. */
-  .boards-table { table-layout: fixed; }
+  /* One table per vendor, and several per section in the docs; fixed layout
+     with set widths on the short columns keeps the columns of tables in one
+     card lined up. */
+  .boards-table, .doc-table { table-layout: fixed; }
+  /* PatternFly truncates header cells to a 1px maximum and lets the table
+     size them; here the header row sets the column widths. */
+  .doc-table .pf-v6-c-table__th { --pf-v6-c-table--cell--MaxWidth: none; --pf-v6-c-table--cell--MinWidth: 0; }
+  .doc-table .doc-col-s { width: 7rem; }
+  .doc-table .doc-col-m { width: 11rem; }
 }
-.doc-list { padding-inline-start: 1.25rem; }
+/* A table in a document keeps apart from the text as a paragraph does; a
+   code block that ends a list item adds no space of its own under it. */
+.pf-v6-c-content > .doc-table { margin-block: var(--pf-t--global--spacer--md); }
+.pf-v6-c-content li > .pf-v6-c-code-block:last-child { margin-block-end: 0; }
+/* Subheadings inside a card (a board maker, Phase 1) at the regular weight
+   the card and page titles use, as on gahingwoo.com. */
+.pf-v6-c-card__body .pf-v6-c-content :is(h3, h4) { font-weight: 400; }
+/* Names that read as one thing (roxora-os/build, CM5-IO) stay on one line. */
+.nowrap { white-space: nowrap; }
+.not-found { max-width: 48rem; }
 
 /* The page grid sizes its column to the content's widest unbreakable run;
    a wide docs table pushed a phone page to 597px although its wrapper

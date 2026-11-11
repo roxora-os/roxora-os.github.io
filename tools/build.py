@@ -26,7 +26,7 @@ being edited.
     python3 tools/build.py
 
 Writes _site/: the pages, 404.html, os_list.json, sitemap.xml, robots.txt and
-a copy of assets/. Needs the markdown package (pip install markdown).
+a copy of assets/. Needs markdown-it-py (pip install -r tools/requirements.txt).
 
 A build from sample release data (a catalog carrying "_sample", which
 fetch_upstream.py --sample produces) goes to output/sample-site/ instead and
@@ -68,7 +68,19 @@ TAGLINE = ("Plain Ubuntu for Rockchip single-board computers, on Armbian's kerne
            "and bootloaders.")
 # Build repository documents for developers rather than for people installing
 # Roxora. They are listed after the others on the Docs page.
-DEV_DOCS = ("release-contract", "architecture", "bsp-classification")
+DEV_DOCS = ("adding-a-board", "release-contract", "architecture", "bsp-classification")
+# The Docs page lists the user guides in this order; the rest follow by name.
+GUIDE_ORDER = ("install", "hardware-test")
+# One line per document, for the Docs page and as the document's subtitle.
+# A document not listed here has neither.
+DOC_SUMMARY = {
+    "install": "Download, check and write an image, and log in the first time",
+    "hardware-test": "What each board is put through before its image is marked tested",
+    "adding-a-board": "From a line in boards.conf to a tested image",
+    "architecture": "How an image is put together from Ubuntu and Armbian",
+    "bsp-classification": "Each file of Armbian's board support package, kept or removed",
+    "release-contract": "What a release contains, and the catalog that tools read",
+}
 
 # Ubuntu codenames the boards can name, with their version numbers. A codename
 # missing here is shown as it is.
@@ -104,16 +116,35 @@ esc = html.escape
 
 # ---- small pieces of markup ----
 
-def kv(rows):
+def kv(rows, term_html=False):
     """Key/value rows, as Cockpit lays out system information. Values are
-    finished HTML; callers escape what they put in."""
+    finished HTML; callers escape what they put in. Terms are text, or
+    finished HTML with term_html."""
     return ('<dl class="pf-v6-c-description-list pf-m-horizontal-on-sm kv">\n' + "\n".join(
         '<div class="pf-v6-c-description-list__group">'
         '<dt class="pf-v6-c-description-list__term">'
         '<span class="pf-v6-c-description-list__text">%s</span></dt>'
         '<dd class="pf-v6-c-description-list__description">'
         '<div class="pf-v6-c-description-list__text">%s</div></dd></div>'
-        % (esc(term), value) for term, value in rows) + "\n</dl>")
+        % (term if term_html else esc(term), value) for term, value in rows) + "\n</dl>")
+
+
+# Names that read as one thing and that a phone would otherwise break at
+# their hyphen or slash.
+NOBREAK = re.compile(r"(roxora-os/build|CM5-IO|pre-releases?|GPL-2\.0)")
+
+
+def nobreak(markup):
+    """Holds those names together in a page's text, leaving tags and code
+    blocks alone."""
+    parts = re.split(r"(?s)(<pre\b.*?</pre>|<[^>]+>)", markup)
+    for i in range(0, len(parts), 2):
+        parts[i] = NOBREAK.sub(r'<span class="nowrap">\1</span>', parts[i])
+    return "".join(parts)
+
+
+def foot_links(items):
+    return "\n".join('                <a href="%s">%s</a>' % (esc(h), esc(l)) for l, h in items)
 
 
 def card(cid, title, body, rail=None, footer=""):
@@ -356,43 +387,81 @@ def doc_title(text, fallback):
     return m.group(1).strip() if m else fallback
 
 
-def render_doc(text, names):
-    try:
-        import markdown
-    except ImportError:
-        sys.exit("tools/build.py needs the markdown package: pip install markdown")
-    text = re.sub(r"^# .+\n", "", text, count=1, flags=re.M)
-    # GitHub nests a list item indented by two spaces; Python-Markdown wants
-    # four. Doubling the indent of list items reads the same on both.
-    text = re.sub(r"^( +)(?=(?:[-*+]|\d+\.) )", lambda m: m.group(1) * 2, text, flags=re.M)
-    body = markdown.markdown(text, extensions=["tables", "fenced_code", "sane_lists", "toc"],
-                             extension_configs={"toc": {"permalink": False}})
+def slugify(text, seen):
+    """The id GitHub gives a heading, so a link to docs/x.md#anchor that
+    works on GitHub works here too: lower case, punctuation other than
+    hyphens and underscores dropped, spaces turned into hyphens, and -1, -2
+    appended to repeats."""
+    base = re.sub(r"[^\w\- ]", "", text.strip().lower()).replace(" ", "-")
+    slug, n = base, 0
+    while slug in seen:
+        n += 1
+        slug = "%s-%d" % (base, n)
+    seen.add(slug)
+    return slug
 
-    def fix_link(m):
-        href = m.group(1)
-        if re.match(r"^[a-z]+:", href) or href.startswith("#"):
-            return m.group(0)
-        path, _, frag = href.partition("#")
-        target = posixpath.normpath(posixpath.join("docs", path))
-        if target == "docs/faq.md" and target[5:] in names:
-            new = "/faq/"
-        elif target.startswith("docs/") and target.endswith(".md") and target[5:] in names:
-            new = "/docs/%s/" % target[5:-3]
-        else:
-            new = "%s/blob/main/%s" % (BUILD_REPO, target)
-        return 'href="%s"' % (new + ("#" + frag if frag else ""))
-    body = re.sub(r'href="([^"]+)"', fix_link, body)
+
+def doc_target(href, titles):
+    """Where a link in a document goes on this site, and the title of the
+    document it opens (None when it opens something else). A link to
+    another document becomes its page here; any other relative link opens
+    the file on GitHub."""
+    if re.match(r"^[a-z]+:", href) or href.startswith("#"):
+        return href, None
+    path, _, frag = href.partition("#")
+    target = posixpath.normpath(posixpath.join("docs", path))
+    slug = target[5:-3] if target.startswith("docs/") and target.endswith(".md") else None
+    if slug in titles:
+        new = "/faq/" if slug == "faq" else "/docs/%s/" % slug
+        title = titles[slug]
+    else:
+        new, title = "%s/blob/main/%s" % (BUILD_REPO, target), None
+    return new + ("#" + frag if frag else ""), title
+
+
+def render_doc(text, titles):
+    """A document from docs/ of the build repository, as GitHub shows it:
+    markdown-it is a CommonMark parser, so code indented or fenced inside a
+    list item, tables and bare addresses come out as they do there."""
+    try:
+        from markdown_it import MarkdownIt
+    except ImportError:
+        sys.exit("tools/build.py needs markdown-it-py: pip install -r tools/requirements.txt")
+    md = MarkdownIt("commonmark", {"linkify": True}).enable(["table", "strikethrough", "linkify"])
+    # Only addresses written out with their scheme become links, as on
+    # GitHub; a file name such as architecture.md is not a domain.
+    md.linkify.set({"fuzzy_link": False, "fuzzy_email": False})
+    tokens = md.parse(re.sub(r"^# .+\n", "", text, count=1, flags=re.M))
+
+    seen = set()
+    labels = []
+    for i, tok in enumerate(tokens):
+        if tok.type == "heading_open":
+            tok.attrSet("id", slugify(tokens[i + 1].content, seen))
+        elif tok.type == "thead_open":
+            labels = []
+        elif tok.type == "th_open":
+            labels.append(re.sub(r"[`*_]", "", tokens[i + 1].content))
+        elif tok.type == "tr_open":
+            col = 0
+        elif tok.type == "td_open":
+            # The column's name, which the stacked layout on a phone shows
+            # beside each value.
+            if col < len(labels):
+                tok.attrSet("data-label", labels[col])
+            col += 1
+        elif tok.type == "inline":
+            fix_inline(tok.children or [], titles)
+    body = md.renderer.render(tokens, md.options, {})
+    # "the GitHub releases of this repository": on this site "this
+    # repository" would be the website's own.
+    body = re.sub(r"\bthis(\s+)repository\b", r"roxora-os/build", body)
 
     # Tables and code blocks are PatternFly components, not bare elements.
-    body = body.replace("<table>", '<div class="table-scroll"><table class="pf-v6-c-table pf-m-compact">')
-    body = body.replace("</table>", "</table></div>")
-    body = body.replace("<thead>", '<thead class="pf-v6-c-table__thead">')
-    body = body.replace("<tbody>", '<tbody class="pf-v6-c-table__tbody">')
-    body = body.replace("<tr>", '<tr class="pf-v6-c-table__tr">')
-    body = re.sub(r"<th(\s[^>]*)?>", lambda m: '<th class="pf-v6-c-table__th" scope="col"%s>' % (m.group(1) or ""), body)
-    body = re.sub(r"<td(\s[^>]*)?>", lambda m: '<td class="pf-v6-c-table__td"%s>' % (m.group(1) or ""), body)
+    # A table stacks into labelled rows below md, as the Boards table does.
+    body = re.sub(r"<table>(.*?)</table>", lambda m: doc_table(m.group(1)), body, flags=re.S)
     body = re.sub(r"<pre><code(?: class=\"[^\"]*\")?>(.*?)</code></pre>",
-                  lambda m: code_block(m.group(1)), body, flags=re.S)
+                  lambda m: code_block(m.group(1).rstrip("\n")), body, flags=re.S)
 
     # One card per second-level heading, so the rail lists the sections.
     parts = re.split(r'<h2 id="([^"]+)">(.*?)</h2>', body)
@@ -405,25 +474,91 @@ def render_doc(text, names):
     return "\n".join(out)
 
 
+def fix_inline(children, titles):
+    """Links and wording that only make sense inside the build repository."""
+    for j, tok in enumerate(children):
+        if tok.type == "link_open":
+            href, title = doc_target(tok.attrGet("href"), titles)
+            tok.attrSet("href", href)
+            # [hardware-test.md](hardware-test.md) reads as a file on GitHub;
+            # here it opens a page, so it is named by the page's title.
+            nxt = children[j + 1] if j + 1 < len(children) else None
+            if (title and nxt is not None and nxt.type in ("text", "code_inline")
+                    and children[j + 2].type == "link_close"
+                    and re.fullmatch(r"[\w.-]+\.md", nxt.content)):
+                nxt.type, nxt.content = "text", title
+
+
+def doc_table(inner):
+    """A table from a document. Below md it stacks into labelled rows, as
+    the Boards table does. From md its layout is fixed: a column whose
+    values are all short (Layer, Type) gets a set width and the rest share
+    what is left, so tables with the same columns in one card line up with
+    each other."""
+    def plain(cell):
+        return html.unescape(re.sub(r"<[^>]+>", "", cell)).strip()
+    rows = re.findall(r"<tr>(.*?)</tr>", inner, re.S)
+    cells = [re.findall(r"<t[dh][^>]*>(.*?)</t[dh]>", r, re.S) for r in rows]
+    ncol = max(len(c) for c in cells)
+    widest = [max((len(plain(c[k])) for c in cells if k < len(c)), default=0)
+              for k in range(ncol)]
+    widths = ["s" if w <= 10 else "m" if w <= 20 else None for w in widest]
+    if all(widths) or ncol < 3:
+        widths = [None] * ncol
+    col = iter(widths)
+
+    def th(m):
+        w = next(col, None)
+        return '<th class="pf-v6-c-table__th%s" scope="col"%s>' % (
+            " doc-col-%s" % w if w else "", m.group(1) or "")
+    inner = re.sub(r"<th(\s[^>]*)?>", th, inner)
+    # The stacked layout makes each cell a grid of label and value, so a
+    # value of text and code mixed is held in one element, or every piece
+    # of it becomes a grid item of its own.
+    inner = re.sub(r"<td(\s[^>]*)?>(.*?)</td>", lambda m: '<td class="pf-v6-c-table__td"%s>'
+                   '<div>%s</div></td>' % (m.group(1) or "", m.group(2)), inner, flags=re.S)
+    inner = inner.replace("<thead>", '<thead class="pf-v6-c-table__thead">')
+    inner = inner.replace("<tbody>", '<tbody class="pf-v6-c-table__tbody">')
+    inner = inner.replace("<tr>", '<tr class="pf-v6-c-table__tr">')
+    # A path breaks after a slash before it breaks anywhere else.
+    inner = re.sub(r"<code>(.*?)</code>", lambda m: "<code>%s</code>"
+                   % m.group(1).replace("/", "/<wbr>"), inner)
+    return '<table class="pf-v6-c-table pf-m-compact pf-m-grid-md doc-table">%s</table>' % inner
+
+
+def link_list(rows):
+    """Pages as a key/value list: the title, the address, and one quiet line
+    on what is there, as gahingwoo.com's 404 page lists its pages."""
+    return kv([(title, '%s<span class="meta">%s</span>' % (
+        link(href, (SITE + href).replace("https://", "").rstrip("/")), esc(meta)))
+        for title, href, meta in rows])
+
+
 def render_docs_index(docs):
-    """Documents for people using Roxora first, then the ones for developers
-    under their own heading. The FAQ has a page of its own and is not listed."""
-    def items(group):
-        return ('<ul class="doc-list">%s</ul>' % "".join(
-            "<li>%s</li>" % link("/docs/%s/" % slug, title) for slug, title, _ in group))
-    docs = [d for d in docs if d[0] != "faq"]
-    users = [d for d in docs if d[0] not in DEV_DOCS]
-    devs = [d for d in docs if d[0] in DEV_DOCS]
+    """Guides for people using Roxora first, then the documents for
+    developers under their own heading, each with its one line."""
+    def rows(group):
+        return [(title, "/faq/" if slug == "faq" else "/docs/%s/" % slug,
+                 DOC_SUMMARY.get(slug, "")) for slug, title, _ in group]
+
+    def listing(entries):
+        return kv([(link(href, title), esc(meta)) for title, href, meta in entries],
+                  term_html=True)
+
+    def order(slug):
+        return (GUIDE_ORDER.index(slug) if slug in GUIDE_ORDER else len(GUIDE_ORDER), slug)
+    users = sorted((d for d in docs if d[0] not in DEV_DOCS and d[0] != "faq"),
+                   key=lambda d: order(d[0]))
+    devs = [d for slug in DEV_DOCS for d in docs if d[0] == slug]
     out = []
     if users:
-        out.append(card("guides", "Guides", content(items(users))))
+        faq = [("FAQ", "/faq/", "Questions people ask about Roxora")] if any(
+            d[0] == "faq" for d in docs) else []
+        out.append(card("guides", "Guides", listing(rows(users) + faq)))
     if devs:
-        out.append(card("developers", "For developers", content(items(devs))))
+        out.append(card("developers", "For developers", listing(rows(devs))))
     if not out:
         out.append(card("documents", "Documents", content("<p>No documents yet.</p>")))
-    out.append(card(None, None, content(
-        "<p>These pages are rendered from %s in the build repository.</p>"
-        % link(BUILD_REPO + "/tree/main/docs", "docs/"))))
     return "\n".join(out)
 
 
@@ -768,6 +903,7 @@ def build():
     for n in names:
         text = (UPSTREAM / "docs" / n).read_text(encoding="utf-8")
         docs.append((n[:-3], doc_title(text, n[:-3]), text))
+    titles = {slug: title for slug, title, _ in docs}
 
     generated = {
         "{{status}}": render_status(boards, catalogs),
@@ -805,10 +941,10 @@ def build():
     for slug, title, text in docs:
         if slug == "faq":
             continue
-        pages.append(("docs/" + slug, "/docs/", title, None,
+        pages.append(("docs/" + slug, "/docs/", title, DOC_SUMMARY.get(slug),
                       "%s: Roxora documentation." % title,
                       ("Source", "%s/blob/main/docs/%s.md" % (BUILD_REPO, slug)),
-                      render_doc(text, names)))
+                      render_doc(text, titles)))
     # One FAQ: docs/faq.md of the build repository. Until it exists there is
     # no FAQ page, rather than a second copy kept here.
     faq = next((d for d in docs if d[0] == "faq"), None)
@@ -816,8 +952,8 @@ def build():
         pages.append(("faq", "/faq/", "FAQ", "Questions people ask about Roxora",
                       "Questions people ask about Roxora, answered.",
                       ("Source", "%s/blob/main/docs/faq.md" % BUILD_REPO),
-                      render_doc(faq[2], names)))
-    pages.append(("about", "/about/", "About", None,
+                      render_doc(faq[2], titles)))
+    pages.append(("about", "/about/", "About", "Who makes Roxora and how to reach them",
                   "Who makes Roxora, how to reach them, and the licence.", None,
                   fragment("about")))
 
