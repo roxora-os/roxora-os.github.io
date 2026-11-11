@@ -1,0 +1,7 @@
+dev/
+cache/
+output/
+_site/
+node_modules/
+__pycache__/
+*.log
