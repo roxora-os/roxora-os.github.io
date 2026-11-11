@@ -258,17 +258,27 @@
       return out;
     }
 
+    // The snippet opens at the start of a word: at the first match when the
+    // prose has one, otherwise at the start of the prose.
     function snippetFor(text, tokens) {
       var lower = text.toLowerCase(), at = -1;
       for (var i = 0; i < tokens.length && at < 0; i++) at = lower.indexOf(tokens[i]);
       if (at < 0) at = 0;
       var start = Math.max(0, at - 50);
-      var cut = text.slice(start, start + 150);
-      return (start > 0 ? '\u2026' : '') + cut + (start + 150 < text.length ? '\u2026' : '');
+      if (start > 0) {
+        var space = text.indexOf(' ', start);
+        start = (space >= 0 && space < at) ? space + 1 : at;
+      }
+      var end = Math.min(text.length, start + 150);
+      if (end < text.length) {
+        var last = text.lastIndexOf(' ', end);
+        if (last > start) end = last;
+      }
+      return (start > 0 ? '\u2026' : '') + text.slice(start, end) + (end < text.length ? '\u2026' : '');
     }
 
     function rank(rec, tokens, q) {
-      var title = rec.t.toLowerCase(), body = (rec.x || '').toLowerCase(), page = rec.p.toLowerCase();
+      var title = rec.t.toLowerCase(), body = ((rec.x || '') + ' ' + (rec.k || '')).toLowerCase(), page = rec.p.toLowerCase();
       for (var i = 0; i < tokens.length; i++) {
         if (title.indexOf(tokens[i]) < 0 && body.indexOf(tokens[i]) < 0 && page.indexOf(tokens[i]) < 0) return -1;
       }

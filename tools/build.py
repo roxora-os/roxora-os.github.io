@@ -443,11 +443,21 @@ def search_records(slug, href, heading, fragment):
         r'(?:<div class="pf-v6-c-card__header[^>]*>.*?</div>\s*)?'
         r'<div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">(.*?)</h2>',
         fragment, re.S)]
+    # The snippet a result shows is read from "x": the card's prose, without
+    # its heading (the result's title already says it) and without code
+    # blocks and checksums, so a snippet never opens in the middle of a hash.
+    # Those are still searched, from "k".
+    code = re.compile(r'(?s)<pre\b.*?</pre>|<code class="hash">.*?</code>')
     out = []
     for i, (pos, cid, title) in enumerate(starts):
         end = starts[i + 1][0] if i + 1 < len(starts) else len(fragment)
-        out.append({"t": title, "u": href + "#" + cid, "p": heading,
-                    "x": text_of(fragment[pos:end])})
+        chunk = re.sub(r'(?s)^.*?</h2>', "", fragment[pos:end], count=1)
+        rec = {"t": title, "u": href + "#" + cid, "p": heading,
+               "x": text_of(code.sub(" ", chunk))}
+        kept = " ".join(text_of(m) for m in code.findall(chunk))
+        if kept:
+            rec["k"] = kept
+        out.append(rec)
     return out
 
 
