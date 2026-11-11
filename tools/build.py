@@ -257,7 +257,8 @@ def read_synced():
     if not f.is_file():
         return None
     when = datetime.strptime(json.loads(f.read_text(encoding="utf-8"))["synced"], "%Y-%m-%d %H:%M")
-    return "synced %d %s, %s UTC" % (when.day, when.strftime("%B %Y"), when.strftime("%H:%M"))
+    return "Synced from GitHub %d %s, %s UTC" % (when.day, when.strftime("%B %Y"),
+                                                  when.strftime("%H:%M"))
 
 
 # ---- generated pages ----
@@ -898,14 +899,24 @@ SHELL = """<!DOCTYPE html>
 
 
 def page_head(heading, subtitle, action):
+    """The title with its subtitle beside it and the page's one action on
+    the same row. A subtitle given as (text, note) puts the note on a line
+    of its own under the title, so a long one does not push the action
+    off the row."""
+    note = ""
+    if isinstance(subtitle, tuple):
+        subtitle, note = subtitle
     btn = ""
     if action:
         btn = ('              <a class="pf-v6-c-button pf-m-secondary" href="%s">'
                '<span class="pf-v6-c-button__text">%s</span></a>\n' % (esc(action[1]), esc(action[0])))
     sub = ' <span class="subtitle">%s</span>' % esc(subtitle) if subtitle else ""
+    title = '<h1 class="page-title" id="page-title">%s%s</h1>' % (esc(heading), sub)
+    if note:
+        title = '<div>%s<p class="page-note">%s</p></div>' % (title, esc(note))
     return ('            <div class="page-head">\n'
-            '              <h1 class="page-title" id="page-title">%s%s</h1>\n%s'
-            '            </div>\n' % (esc(heading), sub, btn))
+            '              %s\n%s'
+            '            </div>\n' % (title, btn))
 
 
 def build():
@@ -960,7 +971,7 @@ def build():
     pages.append(("", "/", NAME, "Plain Ubuntu for Rockchip boards", TAGLINE,
                   None, fragment("index")))
     def with_synced(subtitle):
-        return "%s, %s" % (subtitle, synced) if synced else subtitle
+        return (subtitle, synced) if synced else subtitle
 
     pages.append(("download", "/download/", "Download",
                   with_synced("Roxora %s" % catalogs[0]["release"]["version"]
@@ -1084,7 +1095,7 @@ def build():
 
     _, out = render("404", None, "Page not found", "No page at this address",
                     "This page does not exist.", None,
-                    '<div class="pf-v6-c-card not-found">\n'
+                    '<div class="pf-v6-c-card">\n'
                     '  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">'
                     "<p>The link may be old, or the address mistyped. These are the pages "
                     "of this site; the %s holds everything else.</p></div>\n"

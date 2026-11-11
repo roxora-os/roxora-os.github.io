@@ -436,6 +436,9 @@ a[href^="mailto:"]:not(:where(.pf-v6-c-nav__link))::after,
 .page-head { display: flex; align-items: center; justify-content: space-between; gap: var(--pf-t--global--spacer--md); flex-wrap: wrap; margin-bottom: var(--pf-t--global--spacer--xl); }
 .page-title { font-family: var(--pf-t--global--font--family--heading); font-weight: 400; font-size: 1.75rem; line-height: 1.25; margin: 0; }
 .page-title .subtitle { font-family: var(--pf-t--global--font--family--body); font-size: 1.125rem; font-weight: 400; color: var(--pf-t--global--text--color--subtle); margin-inline-start: var(--pf-t--global--spacer--md); }
+/* A line under the title, such as when the page's data was read. */
+.page-head:has(.page-note) { align-items: flex-start; }
+.page-note { margin: var(--pf-t--global--spacer--xs) 0 0 0; font-size: var(--pf-t--global--font--size--body--default); color: var(--pf-t--global--text--color--subtle); }
 @media (max-width: 640px) { .page-title .subtitle { display: block; margin-inline-start: 0; margin-top: 2px; } }
 
 /* ---- cards ---- */
@@ -720,7 +723,6 @@ code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--fam
 .pf-v6-c-card__body .pf-v6-c-content :is(h3, h4) { font-weight: 400; }
 /* Names that read as one thing (roxora-os/build, CM5-IO) stay on one line. */
 .nowrap { white-space: nowrap; }
-.not-found { max-width: 48rem; }
 
 /* The page grid sizes its column to the content's widest unbreakable run;
    a wide docs table pushed a phone page to 597px although its wrapper
