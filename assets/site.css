@@ -703,7 +703,6 @@ code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--fam
   --pf-v6-c-table__tr--responsive--PaddingInlineEnd: 0px;
 }
 @media (min-width: 48rem) {
-  .boards-table .pf-v6-c-table__td { white-space: nowrap; }
   /* One table per vendor, and several per section in the docs; fixed layout
      with set widths on the short columns keeps the columns of tables in one
      card lined up. */
@@ -714,6 +713,8 @@ code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--fam
   .doc-table .doc-col-s { width: 7rem; }
   .doc-table .doc-col-m { width: 11rem; }
 }
+/* A board maker's name sits a step above its table rather than on its rule. */
+.boards-table { margin-block-start: var(--pf-t--global--spacer--sm); }
 /* A table in a document keeps apart from the text as a paragraph does; a
    code block that ends a list item adds no space of its own under it. */
 .pf-v6-c-content > .doc-table { margin-block: var(--pf-t--global--spacer--md); }

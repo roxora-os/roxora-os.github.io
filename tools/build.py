@@ -200,11 +200,14 @@ def empty_state(title, body):
             '<div class="pf-v6-c-empty-state__body">%s</div></div></div>' % (esc(title), body))
 
 
-def table(cls, head, rows):
+def table(cls, head, rows, widths=None):
     """A compact PatternFly table that stacks below md. rows hold finished
     HTML per cell; every cell carries its column's name for the stacked
-    layout."""
-    th = "".join('<th class="pf-v6-c-table__th" scope="col">%s</th>' % esc(h) for h in head)
+    layout. widths: per column a percentage PatternFly has a width
+    modifier for, or None for a share of what is left."""
+    widths = widths or [None] * len(head)
+    th = "".join('<th class="pf-v6-c-table__th%s" scope="col">%s</th>'
+                 % (" pf-m-width-%d" % w if w else "", esc(h)) for h, w in zip(head, widths))
     body = "\n".join(
         '<tr class="pf-v6-c-table__tr">%s</tr>' % "".join(
             '<td class="pf-v6-c-table__td" data-label="%s">%s</td>' % (esc(h), cell)
@@ -380,7 +383,8 @@ def render_boards(boards):
                 for b in boards if b["vendor"] == vendor]
         groups.append('<div class="pf-v6-c-content%s"><h3>%s</h3></div>\n%s' % (
             " pf-v6-u-mt-lg" if groups else "", esc(vendor),
-            table("boards-table", ["Board", "SoC", "Kernel", "Ubuntu", "Status"], rows)))
+            table("boards-table doc-table", ["Board", "SoC", "Kernel", "Ubuntu", "Status"], rows,
+                  [None, 15, 15, 30, 15])))
     body = "\n".join(groups)
     out = [card("boards", "Supported boards", body, rail="Supported boards")]
     out.append(card("booting", "Booting from an SD card", kv([
