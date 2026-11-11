@@ -61,6 +61,13 @@ SOURCE = "https://github.com/roxora-os/roxora-os.github.io"
 AUTHOR = "Ga Hing Woo"
 AUTHOR_CODE = "https://github.com/gahingwoo"
 OS_LIST_URL = SITE + "/os_list.json"
+# One line that says what Roxora is: the footer, the home page's meta and
+# Open Graph description, and the About page all use it.
+TAGLINE = ("Plain Ubuntu for Rockchip single-board computers, on Armbian's kernels "
+           "and bootloaders.")
+# Build repository documents for developers rather than for people installing
+# Roxora. They are listed after the others on the Docs page.
+DEV_DOCS = ("release-contract", "architecture", "bsp-classification")
 
 # Ubuntu codenames the boards can name, with their version numbers. A codename
 # missing here is shown as it is.
@@ -204,14 +211,20 @@ def read_releases():
     return json.loads((UPSTREAM / "releases.json").read_text(encoding="utf-8"))
 
 
+def read_synced():
+    """When fetch_upstream.py read GitHub, as the line Download and Boards
+    show so that a stale page says so."""
+    f = UPSTREAM / "synced.json"
+    when = json.loads(f.read_text(encoding="utf-8"))["synced"] if f.is_file() else None
+    return ('<p class="synced">Synced from GitHub at %s UTC</p>' % esc(when)) if when else ""
+
+
 # ---- generated pages ----
 
 def render_status(boards, catalogs):
-    names = and_list("the " + n for n in dict.fromkeys(b[5] for b in boards))
     releases = and_list(ubuntu(r) for r in dict.fromkeys(b[2] for b in boards))
     if not catalogs:
-        status = ("Early. No images have been released yet. The first images are "
-                  "being built for %s on Ubuntu %s." % (names, releases))
+        status = "Early. No images have been released yet; the first ones are being built."
     else:
         newest = catalogs[0]
         tested = [i for i in newest["images"] if i["status"] == "hardware-tested"]
@@ -223,7 +236,7 @@ def render_status(boards, catalogs):
                       "built and checked in CI only. The Download page says which.")
         else:
             status = "Every image in the newest release has been tested on hardware."
-    rows = [("Status", esc(status)),
+    rows = [("Stage", esc(status)),
             ("Boards", esc(and_list(dict.fromkeys(b[5] for b in boards)))),
             ("Ubuntu", esc(releases))]
     if catalogs:
@@ -282,8 +295,9 @@ def render_download(catalogs):
         "is; the bootloader is inside the image. %s can do this, and so can any tool that "
         "writes compressed raw images. Some boards need a bootloader in their SPI flash "
         "before they boot from an SD card: see %s.</p>"
-        "<p>At the first login the user is <code>ubuntu</code> with the password "
-        "<code>ubuntu</code>, and you are asked to choose a new password.</p>"
+        "<p>The first login, on the console or over SSH, is user <code>roxora</code> with "
+        "the password <code>roxora</code>, and you are asked to choose a new password "
+        "straight away.</p>"
         % (link("/rpi-imager/", "Raspberry Pi Imager"),
            link("/boards/#booting", "Booting from an SD card")))))
 
@@ -350,7 +364,9 @@ def render_doc(text, names):
             return m.group(0)
         path, _, frag = href.partition("#")
         target = posixpath.normpath(posixpath.join("docs", path))
-        if target.startswith("docs/") and target.endswith(".md") and target[5:] in names:
+        if target == "docs/faq.md" and target[5:] in names:
+            new = "/faq/"
+        elif target.startswith("docs/") and target.endswith(".md") and target[5:] in names:
             new = "/docs/%s/" % target[5:-3]
         else:
             new = "%s/blob/main/%s" % (BUILD_REPO, target)
@@ -380,13 +396,25 @@ def render_doc(text, names):
 
 
 def render_docs_index(docs):
-    rows = [(title, link("/docs/%s/" % slug, title)) for slug, title, _ in docs]
-    body = ('<ul class="doc-list">%s</ul>' % "".join(
-        "<li>%s</li>" % link("/docs/%s/" % slug, title) for slug, title, _ in docs)
-        if rows else "<p>No documents yet.</p>")
-    return card("documents", "Documents", content(
-        body + "<p>These pages are rendered from %s in the build repository.</p>"
-        % link(BUILD_REPO + "/tree/main/docs", "docs/")))
+    """Documents for people using Roxora first, then the ones for developers
+    under their own heading. The FAQ has a page of its own and is not listed."""
+    def items(group):
+        return ('<ul class="doc-list">%s</ul>' % "".join(
+            "<li>%s</li>" % link("/docs/%s/" % slug, title) for slug, title, _ in group))
+    docs = [d for d in docs if d[0] != "faq"]
+    users = [d for d in docs if d[0] not in DEV_DOCS]
+    devs = [d for d in docs if d[0] in DEV_DOCS]
+    out = []
+    if users:
+        out.append(card("guides", "Guides", content(items(users))))
+    if devs:
+        out.append(card("developers", "For developers", content(items(devs))))
+    if not out:
+        out.append(card("documents", "Documents", content("<p>No documents yet.</p>")))
+    out.append(card(None, None, content(
+        "<p>These pages are rendered from %s in the build repository.</p>"
+        % link(BUILD_REPO + "/tree/main/docs", "docs/"))))
+    return "\n".join(out)
 
 
 # ---- the shell ----
@@ -414,9 +442,12 @@ def search_records(slug, href, heading, fragment):
 
 
 
-def render_nav(current):
+def render_nav(current, have):
+    """have: the site's own pages in this build. A link to one that was not
+    built (the FAQ before docs/faq.md exists) is left out."""
     out = []
     for title, items in NAV:
+        items = [(l, h) for l, h in items if not h.startswith("/") or h in have]
         tid = re.sub(r"[^a-z]+", "-", title.lower()).strip("-") + "-title"
         out.append('        <section class="pf-v6-c-nav__section" aria-labelledby="%s">\n'
                    '          <h2 class="pf-v6-c-nav__section-title" id="%s">%s</h2>\n'
@@ -595,24 +626,7 @@ SHELL = """<!DOCTYPE html>
       <footer class="pf-v6-c-page__main-section site-footer">
         <div class="pf-v6-c-page__main-body">
           <div class="pf-v6-l-grid pf-m-gutter">
-            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
-              <p class="foot-title">Roxora</p>
-              <nav aria-label="Roxora">
-                <a href="/download/">Download</a>
-                <a href="/boards/">Boards</a>
-                <a href="/rpi-imager/">Raspberry Pi Imager</a>
-                <a href="/catalog/index.json">Release catalog</a>
-              </nav>
-            </div>
-            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
-              <p class="foot-title">Documentation</p>
-              <nav aria-label="Documentation">
-                <a href="/docs/">Docs</a>
-                <a href="/faq/">FAQ</a>
-                <a href="/about/">About</a>
-              </nav>
-            </div>
-            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-3-col-on-lg">
+            <div class="pf-v6-l-grid__item pf-m-6-col-on-sm pf-m-9-col-on-lg">
               <p class="foot-title">Elsewhere</p>
               <nav aria-label="Elsewhere">
                 <a href="%(build_repo)s">Build repository</a>
@@ -626,9 +640,7 @@ SHELL = """<!DOCTYPE html>
                 <img class="pf-v6-c-brand brand-mark" src="/assets/brand/roxora-mark.svg" width="120" height="120" alt="" loading="lazy">
                 <span class="brand-name wordmark">roxora</span>
               </span>
-              <p class="foot-about">Images for Rockchip boards with Armbian&rsquo;s kernel and bootloader
-                and a stock Ubuntu userspace. Not affiliated with Canonical, the Armbian
-                project or Rockchip.</p>
+              <p class="foot-about">%(tagline)s</p>
               <address>
                 <a href="mailto:%(email)s">%(email)s</a><br>
                 Issues and pull requests go to the build repository.
@@ -640,7 +652,7 @@ SHELL = """<!DOCTYPE html>
 
       <section class="pf-v6-c-page__main-section pf-m-no-fill foot-legal">
         <div class="pf-v6-c-page__main-body">
-          <span>Copyright &copy; <span id="year">%(year)s</span> %(author)s. The code behind this site is licensed under <a href="%(source)s/blob/main/LICENSE">GPL-2.0</a>.</span>
+          <span>Copyright &copy; <span id="year">%(year)s</span> %(author)s. Roxora is an independent project, not affiliated with Canonical, Armbian or Rockchip. The code behind this site is licensed under <a href="%(source)s/blob/main/LICENSE">GPL-2.0</a>.</span>
           <span><a href="%(source)s">View page source</a></span>
           <span><button class="link-button" type="button" id="about-page-open">About this site</button></span>
           <span><a href="mailto:%(email)s">Contact</a></span>
@@ -713,6 +725,7 @@ def build():
         sys.exit("no cache/upstream/: run tools/fetch_upstream.py first")
     boards = read_boards()
     catalogs = read_releases()
+    synced = read_synced()
     sample = sample_flag or any("_sample" in c for c in catalogs)
     out_dir = ROOT / ("output/sample-site" if sample else "_site")
     if sample:
@@ -748,17 +761,16 @@ def build():
             sys.exit("content/%s.html: unknown %s" % (slug, ", ".join(left)))
         return text
 
-    pages.append(("", "/", NAME, "Ubuntu userspace with Armbian's hardware support",
-                  "Roxora builds images for Rockchip boards that pair Armbian's kernel and "
-                  "bootloader with a stock Ubuntu userspace.",
-                  ("Download", "/download/"), fragment("index")))
+    pages.append(("", "/", NAME, "Plain Ubuntu for Rockchip boards", TAGLINE,
+                  None, fragment("index")))
     pages.append(("download", "/download/", "Download",
                   "Roxora %s" % catalogs[0]["release"]["version"] if catalogs else "No releases yet",
                   "Download Roxora images, with their sizes, checksums and test status.",
-                  ("All releases", BUILD_REPO + "/releases"), render_download(catalogs)))
+                  ("All releases", BUILD_REPO + "/releases"),
+                  render_download(catalogs) + "\n" + synced))
     pages.append(("boards", "/boards/", "Boards", "%d supported" % len(boards),
                   "The boards Roxora builds images for, with kernel branch, Ubuntu "
-                  "release and test status.", None, render_boards(boards)))
+                  "release and test status.", None, render_boards(boards) + "\n" + synced))
     pages.append(("rpi-imager", "/rpi-imager/", "Raspberry Pi Imager", "Writing Roxora with Imager",
                   "How to point Raspberry Pi Imager at the Roxora repository file to write "
                   "Roxora images.", None, fragment("rpi-imager")))
@@ -766,13 +778,20 @@ def build():
                   "Roxora documentation, rendered from the build repository.", None,
                   render_docs_index(docs)))
     for slug, title, text in docs:
+        if slug == "faq":
+            continue
         pages.append(("docs/" + slug, "/docs/", title, None,
                       "%s: Roxora documentation." % title,
                       ("Source", "%s/blob/main/docs/%s.md" % (BUILD_REPO, slug)),
                       render_doc(text, names)))
-    pages.append(("faq", "/faq/", "FAQ", "Questions people ask about Roxora",
-                  "Why Roxora exists next to Armbian's images and ubuntu-rockchip, and what "
-                  "it does not provide.", None, fragment("faq")))
+    # One FAQ: docs/faq.md of the build repository. Until it exists there is
+    # no FAQ page, rather than a second copy kept here.
+    faq = next((d for d in docs if d[0] == "faq"), None)
+    if faq:
+        pages.append(("faq", "/faq/", "FAQ", "Questions people ask about Roxora",
+                      "Questions people ask about Roxora, answered.",
+                      ("Source", "%s/blob/main/docs/faq.md" % BUILD_REPO),
+                      render_doc(faq[2], names)))
     pages.append(("about", "/about/", "About", None,
                   "Who makes Roxora, how to reach them, and the licence.", None,
                   fragment("about")))
@@ -836,18 +855,20 @@ def build():
             description=esc(description),
             canonical=SITE + href, site=SITE, name=NAME, email=EMAIL, source=SOURCE,
             build_repo=BUILD_REPO, author=esc(AUTHOR), year=built.year,
+            tagline=esc(TAGLINE),
             pf_css="/assets/patternfly/patternfly-site.css", site_css="/assets/site.css",
             site_js="/assets/site.js", aboutrows=aboutrows,
             heading=esc(heading),
             noindex='<meta name="robots" content="noindex">\n' if (sample or directory == "404") else "",
             head=page_head(heading, subtitle, action),
-            nav=render_nav(current), rail=render_rail(rail),
+            nav=render_nav(current, have), rail=render_rail(rail),
             railcls=" with-rail" if rail else "",
             content=body)
         # The og:image is an absolute URL on this site; stamp it too.
         out = ASSET.sub(stamp, out)
         return href, out
 
+    have = {"/" + (d + "/" if d else "") for d, *_ in pages}
     written = []
     for directory, current, heading, subtitle, description, action, body in pages:
         href, out = render(directory, current, heading, subtitle, description, action, body)

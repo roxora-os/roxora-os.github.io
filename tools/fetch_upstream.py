@@ -17,8 +17,9 @@
     python3 tools/fetch_upstream.py --local ../build
     python3 tools/fetch_upstream.py --local ../build --sample ../build/docs/sample-catalog.json
 
-Writes cache/upstream/: boards.conf, docs/*.md and releases.json, which holds
-the roxora-catalog.json of every published release, newest first. The
+Writes cache/upstream/: boards.conf, docs/*.md, releases.json, which holds
+the roxora-catalog.json of every published release, newest first, and
+synced.json, the time of this fetch. The
 catalog format is docs/release-contract.md in roxora-os/build.
 
 --local reads boards.conf and docs/ from a checkout instead of GitHub.
@@ -38,6 +39,7 @@ import shutil
 import sys
 import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / "cache" / "upstream"
@@ -149,6 +151,9 @@ def main(argv):
         cats = [cat]
     else:
         cats = releases()
+    (OUT / "synced.json").write_text(json.dumps({
+        "synced": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")}) + "\n",
+        encoding="utf-8")
     (OUT / "releases.json").write_text(
         json.dumps(cats, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 

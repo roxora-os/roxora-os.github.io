@@ -2,11 +2,13 @@
 
 The Roxora website, served at https://roxora-os.github.io.
 
-Download, Boards, Docs and the Raspberry Pi Imager repository file
-(`os_list.json`) are generated from [roxora-os/build](https://github.com/roxora-os/build)
-when the site is built: its releases, `boards.conf` and `docs/*.md`. The other
-pages are fragments in `content/`. The workflow in `.github/workflows/site.yml`
-builds and deploys on every push to `main` and every six hours.
+Download, Boards, Docs, FAQ, the release catalogs (`/catalog/`) and the
+Raspberry Pi Imager repository file (`os_list.json`) are generated from
+[roxora-os/build](https://github.com/roxora-os/build) when the site is built:
+its releases, `boards.conf` and `docs/*.md`. The other pages are fragments in
+`content/`. The workflow in `.github/workflows/site.yml` builds and deploys on
+every push to `main`, every hour, and on a `repository_dispatch` of type
+`build-updated` sent by the build repository.
 
 ## Building locally
 

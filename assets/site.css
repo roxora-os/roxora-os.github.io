@@ -647,3 +647,5 @@ code { font-family: var(--pf-t--global--font--family--mono); font-size: 0.9em; }
 .pf-v6-c-page__main-container, .pf-v6-c-page__main, .pf-v6-c-page__main-section,
 .page-content, .pf-v6-c-page__main-body { min-width: 0; }
 .page-title { min-width: 0; overflow-wrap: anywhere; }
+/* When the data on Download and Boards was read from GitHub. */
+.synced { margin-block-start: var(--pf-t--global--spacer--lg); color: var(--pf-t--global--text--color--subtle); font-size: var(--pf-t--global--font--size--body--sm); }

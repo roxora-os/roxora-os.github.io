@@ -4,12 +4,15 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
-  # Download, Boards, Docs and the Raspberry Pi Imager file are read from
-  # roxora-os/build when the site is built. Rebuilding on that repository's
-  # releases would need a token with access to this one, so the site is
-  # rebuilt on a schedule instead: a new release shows up within six hours.
+  # Download, Boards, Docs, the catalog and the Raspberry Pi Imager file are
+  # read from roxora-os/build when the site is built. That repository sends
+  # a repository_dispatch of type build-updated when it publishes a release
+  # or boards.conf changes on main, which needs a token it holds; the hourly
+  # schedule is the fallback, so the site is never more than an hour behind.
+  repository_dispatch:
+    types: [build-updated]
   schedule:
-    - cron: "17 */6 * * *"
+    - cron: "17 * * * *"
 
 permissions:
   contents: read

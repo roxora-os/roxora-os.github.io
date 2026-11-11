@@ -2,7 +2,7 @@
 <div class="pf-v6-c-card" id="repository" data-rail="Repository file">
   <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">Repository file</h2></div>
   <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">
-<p>Raspberry Pi Imager can list operating systems from a repository other than Raspberry Pi&rsquo;s own. Roxora publishes one, rebuilt from the releases every time this site is built:</p>
+<p>Raspberry Pi Imager can list operating systems from a repository other than its default one. Roxora publishes one, rebuilt from the releases every time this site is built:</p>
 </div>
 <div class="pf-v6-c-code-block"><div class="pf-v6-c-code-block__content"><pre class="pf-v6-c-code-block__pre"><code class="pf-v6-c-code-block__code">{{os-list-url}}</code></pre></div></div>
 <div class="pf-v6-c-content">
@@ -15,12 +15,12 @@
   <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">In the app</h2></div>
   <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">
 <ol>
-<li>Open Raspberry Pi Imager 2 and choose <strong>App Options</strong>.</li>
+<li>Open Imager 2 and choose <strong>App Options</strong>.</li>
 <li>Next to <strong>Content Repository</strong>, choose <strong>Edit</strong>.</li>
 <li>Select <strong>Use custom URL</strong>, enter the address above, and choose <strong>Apply &amp; Restart</strong>.</li>
 <li>At the device step, choose your board. Then choose the Roxora image and the card or drive to write to.</li>
 </ol>
-<p>To go back to Raspberry Pi&rsquo;s own list, open the same dialog and select <strong>Raspberry Pi (default)</strong>.</p>
+<p>To go back to the default list, open the same dialog and select <strong>Raspberry Pi (default)</strong>.</p>
 </div></div>
 </div>
 </div>
@@ -37,11 +37,11 @@
 <div class="section">
 <div class="pf-v6-c-card" id="expect" data-rail="What to expect">
   <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">What to expect</h2></div>
-  <div class="pf-v6-c-card__body"><dl class="pf-v6-c-description-list pf-m-horizontal-on-sm kv">
-<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Devices</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">The device list shows the Roxora boards instead of Raspberry Pi models, and each board shows only its own images.</div></dd></div>
+  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content"><p>Roxora images are for the boards listed here and do not boot on a Raspberry Pi.</p></div>
+<dl class="pf-v6-c-description-list pf-m-horizontal-on-sm kv pf-v6-u-mt-lg">
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Devices</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">The device list shows the boards Roxora supports, and each board shows only its own images.</div></dd></div>
 <div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Radxa ROCK 4D</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">The ROCK 4D does not boot from an SD card until U-Boot is in its SPI flash. See <a href="/boards/#booting">Booting from an SD card</a> and the <a href="https://docs.radxa.com/en/rock4/rock4d">Radxa ROCK 4D documentation</a>.</div></dd></div>
-<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">OS customisation</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Not offered for Roxora images. At the first login the user is <code>ubuntu</code> with the password <code>ubuntu</code>, and you are asked to choose a new password.</div></dd></div>
-<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Raspberry Pi</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Roxora images do not boot on a Raspberry Pi. With this repository no Raspberry Pi model is in the device list, so there is no way to pick one, but Imager does not check what the card will go into.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">First login</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">User <code>roxora</code>, password <code>roxora</code>, on the console or over SSH. You are asked to choose a new password straight away. Imager&rsquo;s OS customisation is not offered for Roxora images.</div></dd></div>
 <div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Other tools</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Imager is optional. The <a href="/download/">Download</a> page has every image file, and any tool that writes compressed raw images works.</div></dd></div>
 </dl></div>
 </div>
