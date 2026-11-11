@@ -86,6 +86,9 @@ def check_catalog(cat, where):
                   "extract_size", "extract_sha256", "status"):
             if k not in img:
                 sys.exit("fetch_upstream: %s: images[%d].%s missing" % (where, i, k))
+        for k in ("file", "url", "size", "sha256"):
+            if "spi" in img and k not in img["spi"]:
+                sys.exit("fetch_upstream: %s: images[%d].spi.%s missing" % (where, i, k))
 
 
 def releases():

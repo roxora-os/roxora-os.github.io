@@ -281,6 +281,17 @@ def render_download(catalogs):
         ]
         if img.get("verify_url"):
             rows.append(("Image checks", link(img["verify_url"], "verify output")))
+        spi = img.get("spi")
+        if spi:
+            # The ROCK 4D's boot ROM does not boot from a card, so its release
+            # carries a U-Boot image for the SPI flash beside the disk image.
+            rows.append(("SPI bootloader",
+                         '%s<span class="meta">%s, SHA-256 <code class="hash">%s</code></span>'
+                         '<span class="meta">It goes into the board\'s SPI flash, not onto '
+                         'the card. See %s.</span>'
+                         % (link(spi["url"], spi["file"]), esc(size(spi["size"])),
+                            esc(spi["sha256"]),
+                            link("/boards/#booting", "Booting from an SD card"))))
         cid = "image-%s-%s-%s" % (img["board"], img["release"], img["branch"])
         title = img["board_name"]
         if sum(1 for i in newest["images"] if i["board"] == img["board"]) > 1:
