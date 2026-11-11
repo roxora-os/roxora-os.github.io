@@ -1,0 +1,2 @@
+markdown==3.11.3
+jsonschema==4.26.0
