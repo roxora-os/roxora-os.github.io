@@ -1,0 +1,74 @@
+name: Build and deploy
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  # Download, Boards, Docs and the Raspberry Pi Imager file are read from
+  # roxora-os/build when the site is built. Rebuilding on that repository's
+  # releases would need a token with access to this one, so the site is
+  # rebuilt on a schedule instead: a new release shows up within six hours.
+  schedule:
+    - cron: "17 */6 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install -r tools/requirements.txt
+
+      # The generators are tested on the sample catalog from the release
+      # contract first. That build goes to output/sample-site/, which is
+      # never uploaded: sample entries do not reach the live site.
+      - name: Test build from the sample catalog
+        run: |
+          mkdir -p cache
+          curl -fsSL -o cache/sample-catalog.json \
+            https://raw.githubusercontent.com/roxora-os/build/main/docs/sample-catalog.json
+          python3 tools/fetch_upstream.py --sample cache/sample-catalog.json
+          python3 tools/build.py
+          python3 tools/check_links.py --root output/sample-site
+          python3 tools/os_list.py check output/sample-site/os_list.json
+
+      # The real build. If GitHub cannot be read the fetch fails, nothing is
+      # deployed, and the site already live stays up.
+      - name: Fetch releases, boards and docs
+        run: python3 tools/fetch_upstream.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: python3 tools/build.py
+      # A link that points nowhere is the one bug a static site can still ship,
+      # so the build does not go out until every one of them resolves.
+      - run: python3 tools/check_links.py
+      - run: python3 tools/os_list.py check _site/os_list.json
+      - name: No sample data in the site
+        run: |
+          ! grep -rl '_sample\|SAMPLE DATA' _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
