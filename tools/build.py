@@ -153,7 +153,7 @@ def kv(rows, term_html=False):
 
 # Names that read as one thing and that a phone would otherwise break at
 # their hyphen or slash.
-NOBREAK = re.compile(r"(roxora-os/build|CM5-IO|pre-releases?|GPL-2\.0)")
+NOBREAK = re.compile(r"(roxora-os/(?:build|imager|hwtool|design)\b|CM5-IO|pre-releases?|GPL-2\.0)")
 
 
 def nobreak(markup):
