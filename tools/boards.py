@@ -62,8 +62,11 @@ def parse(text, where="boards.conf"):
         row = {c.lower(): v for c, v in zip(columns, parts)}
         # NAME carries the vendor too ("Radxa ROCK 4D" under Radxa). A line
         # that left VENDOR out would otherwise shift the name's first word
-        # into it and read as valid.
-        if "vendor" in row and row["name"].split()[0] != row["vendor"]:
+        # into it and read as valid. Images that are not for one maker's
+        # board (VENDOR Generic, such as the UEFI image) name what they run
+        # on instead.
+        if ("vendor" in row and row["vendor"] != "Generic"
+                and row["name"].split()[0] != row["vendor"]):
             sys.exit("%s:%d: NAME %r does not start with VENDOR %r: %r"
                      % (where, number, row["name"], row["vendor"], raw))
         row.setdefault("vendor", row["name"].split()[0])
