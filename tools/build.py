@@ -105,6 +105,8 @@ SITE_PAGES = [
     ("Docs", "/docs/", "Installing, testing, and how Roxora is built."),
     ("FAQ", "/faq/", "Questions people ask about Roxora."),
     ("About", "/about/", "Who makes Roxora and how to reach them."),
+    ("Privacy policy", "/privacy/", "What the website and Roxora Imager fetch, and from where."),
+    ("Code signing policy", "/code-signing/", "Who may sign Roxora Imager, and what is signed."),
 ]
 
 # Sidebar navigation. Section title, then (label, href) per item.
@@ -929,6 +931,8 @@ SHELL = """<!DOCTYPE html>
         <div class="pf-v6-c-page__main-body">
           <span>Copyright &copy; <span id="year">%(year)s</span> %(author)s</span>
           <span><a href="%(source)s">View page source</a></span>
+          <span><a href="/privacy/">Privacy policy</a></span>
+          <span><a href="/code-signing/">Code signing policy</a></span>
           <span><button class="link-button" type="button" id="about-page-open">About this site</button></span>
           <span><a href="mailto:%(email)s">Contact</a></span>
         </div>
@@ -1100,6 +1104,12 @@ def build():
     pages.append(("about", "/about/", "About", "Who makes Roxora and how to reach them",
                   "Who makes Roxora, how to reach them, and the licence.", None,
                   fragment("about")))
+    pages.append(("privacy", "/privacy/", "Privacy policy", "The website and Roxora Imager",
+                  "What the Roxora website and Roxora Imager fetch, from where, and what "
+                  "they keep.", None, fragment("privacy")))
+    pages.append(("code-signing", "/code-signing/", "Code signing policy", "Roxora Imager",
+                  "Who may sign Roxora Imager, what is signed, and how.", None,
+                  fragment("code-signing")))
 
     if out_dir.exists():
         shutil.rmtree(out_dir)

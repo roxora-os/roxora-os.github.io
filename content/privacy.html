@@ -1,0 +1,55 @@
+<div class="section">
+<div class="pf-v6-c-card" id="summary" data-rail="Summary">
+  <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">Summary</h2></div>
+  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">
+<p>Neither the website nor Roxora Imager has accounts, analytics or telemetry, and neither sets cookies. Roxora Imager fetches the release list, the images you choose and Rockchip&rsquo;s loader files, all from GitHub, and once a day asks GitHub whether there is a newer version, which you can turn off. Nothing is sent about you or your computer beyond what any web request carries.</p><p>Every address below is fetched over HTTPS. Whoever runs the server at the other end (GitHub, and Cloudflare for the download proxy) receives your IP address and the request, as any web server does, and their own privacy policies cover what they record.</p>
+</div></div>
+</div>
+</div>
+<div class="section">
+<div class="pf-v6-c-card" id="website" data-rail="This website">
+  <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">This website</h2></div>
+  <div class="pf-v6-c-card__body"><dl class="pf-v6-c-description-list pf-m-horizontal-on-sm kv">
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Hosting</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">GitHub Pages serves the site. What GitHub records about requests is covered by <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement">GitHub&rsquo;s privacy statement</a>.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Loaded from elsewhere</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Nothing. Fonts, styles and scripts are served from this domain.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Cookies and analytics</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">None. Your visit is not counted.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Kept in your browser</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Your light or dark choice, in local storage. Nothing else.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Search</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Runs in your browser. What you type is not sent anywhere.</div></dd></div>
+</dl></div>
+</div>
+</div>
+<div class="section">
+<div class="pf-v6-c-card" id="imager" data-rail="Roxora Imager">
+  <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">Roxora Imager</h2></div>
+  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">
+<p>What the desktop app fetches, and when:</p>
+</div><dl class="pf-v6-c-description-list pf-m-horizontal-on-sm kv pf-v6-u-mt-lg">
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">When it starts</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">The list of Roxora releases from <code>api.github.com</code> (the releases of roxora-os/build), and the <code>roxora-catalog.json</code> of each from the release files on <code>github.com</code>.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">When you write an image</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">The image you chose, and for the Radxa ROCK 4D its SPI bootloader image, from the releases of roxora-os/build on <code>github.com</code>, which hands the download to GitHub&rsquo;s file servers. Each file is checked against the release&rsquo;s SHA-256 and kept in the app&rsquo;s user data folder (<code>images/</code>).</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">First write over USB (Maskrom)</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Rockchip&rsquo;s loader files from <code>raw.githubusercontent.com/<wbr>rockchip-linux/<wbr>rkbin</code> at a pinned commit, checked against pinned SHA-256 sums and kept in the user data folder (<code>loaders/</code>).</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Update check</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">At most once a day, the newest release of Roxora Imager from <code>api.github.com</code>. If there is a newer version the app says so and links its release page; it does not download or install anything. Turn it off in the app&rsquo;s settings: <strong>Check for a new version once a day</strong>.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Links</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">A link in the app opens in your web browser, only when you click it.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Kept on your computer</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">Its settings (<code>settings.json</code>), the downloaded images and the loader, in the app&rsquo;s user data folder. Nothing is uploaded.</div></dd></div>
+</dl></div>
+</div>
+</div>
+<div class="section">
+<div class="pf-v6-c-card" id="imager-web" data-rail="Roxora Imager in the browser">
+  <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">Roxora Imager in the browser</h2></div>
+  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">
+<p>The web version at <a href="https://roxora-os.github.io/imager/">roxora-os.github.io/imager</a> is served by GitHub Pages like this site. It fetches:</p>
+</div><dl class="pf-v6-c-description-list pf-m-horizontal-on-sm kv pf-v6-u-mt-lg">
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">The release list</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">From this site&rsquo;s copy of the catalogs (<code>roxora-os.github.io/<wbr>catalog/</code>), checked against the release list from <code>api.github.com</code>.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Release files</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">A browser cannot download GitHub release files itself. When the build has a download proxy, the files come through it: a Cloudflare Worker run by the project that serves only Roxora release files and keeps no log of its own. Otherwise you download the file yourself and pick it. The version published now has no proxy.</div></dd></div>
+<div class="pf-v6-c-description-list__group"><dt class="pf-v6-c-description-list__term"><span class="pf-v6-c-description-list__text">Loader files</span></dt><dd class="pf-v6-c-description-list__description"><div class="pf-v6-c-description-list__text">From <code>raw.githubusercontent.com/<wbr>rockchip-linux/<wbr>rkbin</code> at the same pinned commit, checked the same way.</div></dd></div>
+</dl></div>
+</div>
+</div>
+<div class="section">
+<div class="pf-v6-c-card" id="contact" data-rail="Questions">
+  <div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">Questions</h2></div>
+  <div class="pf-v6-c-card__body"><div class="pf-v6-c-content">
+<p>Write to <a href="mailto:oss@gahingwoo.com">oss@gahingwoo.com</a>. The sources of the website and of Roxora Imager are public: <a href="https://github.com/roxora-os/roxora-os.github.io">roxora-os/roxora-os.github.io</a> and <a href="https://github.com/roxora-os/imager">roxora-os/imager</a>.</p>
+</div></div>
+</div>
+</div>
