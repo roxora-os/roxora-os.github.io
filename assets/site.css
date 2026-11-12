@@ -731,3 +731,5 @@ code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--fam
 .pf-v6-c-page__main-container, .pf-v6-c-page__main, .pf-v6-c-page__main-section,
 .page-content, .pf-v6-c-page__main-body { min-width: 0; }
 .page-title { min-width: 0; overflow-wrap: anywhere; }
+/* Roxora Imager's packages for one platform, one under the other. */
+.pkg-list { display: flex; flex-direction: column; gap: var(--pf-t--global--spacer--sm); }

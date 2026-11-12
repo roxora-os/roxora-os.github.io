@@ -18,7 +18,8 @@
     python3 tools/fetch_upstream.py --local ../build --sample ../build/docs/sample-catalog.json
 
 Writes cache/upstream/: boards.conf, docs/*.md, releases.json, which holds
-the roxora-catalog.json of every published release, newest first, and
+the roxora-catalog.json of every published release, newest first,
+imager.json, the newest release of Roxora Imager (roxora-os/imager), and
 synced.json, the time of this fetch. The
 catalog format is docs/release-contract.md in roxora-os/build.
 
@@ -158,6 +159,34 @@ def releases():
     return out
 
 
+IMAGER = "roxora-os/imager"
+IMAGER_DOWNLOAD = "https://github.com/%s/releases/download/" % IMAGER
+
+
+def imager_release():
+    """The newest published release of Roxora Imager, pre-releases
+    included, with only the assets that download from its own releases.
+    None when there is no release yet."""
+    batch = get_json("https://api.github.com/repos/%s/releases?per_page=20" % IMAGER, api=True)
+    rel = next((r for r in batch if not r.get("draft")), None)
+    if rel is None:
+        return None
+    assets = []
+    for a in rel.get("assets", []):
+        url = a.get("browser_download_url", "")
+        if not url.startswith(IMAGER_DOWNLOAD):
+            print("note: imager %s: %s is not downloaded from %s, left out"
+                  % (rel["tag_name"], a.get("name"), IMAGER_DOWNLOAD))
+            continue
+        assets.append({"name": a["name"], "url": url, "size": a.get("size", 0)})
+    url = rel.get("html_url", "")
+    if not url.startswith("https://github.com/%s/releases/" % IMAGER):
+        url = "https://github.com/%s/releases" % IMAGER
+    return {"tag": rel["tag_name"], "name": rel.get("name") or rel["tag_name"],
+            "prerelease": bool(rel.get("prerelease")),
+            "date": (rel.get("published_at") or "")[:10], "url": url, "assets": assets}
+
+
 def main(argv):
     local = sample = None
     args = list(argv)
@@ -202,6 +231,9 @@ def main(argv):
     (OUT / "synced.json").write_text(json.dumps({
         "synced": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")}) + "\n",
         encoding="utf-8")
+    imager = imager_release()
+    (OUT / "imager.json").write_text(json.dumps(imager, indent=1) + "\n", encoding="utf-8")
+    print("imager: %s" % (imager["tag"] if imager else "no release"))
     (OUT / "releases.json").write_text(
         json.dumps(cats, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 

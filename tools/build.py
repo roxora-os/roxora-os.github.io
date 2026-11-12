@@ -90,14 +90,16 @@ UBUNTU = {"jammy": ("22.04", True), "noble": ("24.04", True),
 
 # The footer's own columns, as gahingwoo.com has them. A page not built is
 # left out.
-FOOTER_PAGES = [("Home", "/"), ("Download", "/download/"), ("Boards", "/boards/"),
-                ("Raspberry Pi Imager", "/rpi-imager/"), ("About", "/about/")]
+FOOTER_PAGES = [("Home", "/"), ("Download", "/download/"), ("Roxora Imager", "/roxora-imager/"),
+                ("Boards", "/boards/"), ("Raspberry Pi Imager", "/rpi-imager/"),
+                ("About", "/about/")]
 FOOTER_DOCS = [("Installing Roxora", "/docs/install/"), ("All documents", "/docs/"),
                ("FAQ", "/faq/")]
 # The pages the 404 page lists: title, address, what is there.
 SITE_PAGES = [
     ("Home", "/", "What Roxora is, and how far along it is."),
     ("Download", "/download/", "The newest images, with sizes and checksums."),
+    ("Roxora Imager", "/roxora-imager/", "The app that downloads, checks and writes an image."),
     ("Boards", "/boards/", "The supported boards and their test status."),
     ("Raspberry Pi Imager", "/rpi-imager/", "Writing Roxora with Raspberry Pi Imager."),
     ("Docs", "/docs/", "Installing, testing, and how Roxora is built."),
@@ -110,6 +112,7 @@ NAV = [
     ("Pages", [
         ("Home", "/"),
         ("Download", "/download/"),
+        ("Roxora Imager", "/roxora-imager/"),
         ("Boards", "/boards/"),
         ("Raspberry Pi Imager", "/rpi-imager/"),
     ]),
@@ -249,6 +252,84 @@ def read_boards():
     return boards_conf.parse(path.read_text(encoding="utf-8"), "boards.conf")
 
 
+def read_imager():
+    f = UPSTREAM / "imager.json"
+    return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else None
+
+
+# Roxora Imager's packages by platform: (platform, [(label, file name
+# pattern)]). A file the release does not have is left out, and a platform
+# with none of its files is too.
+IMAGER_PACKAGES = [
+    ("Windows (x64)", [("Installer", r"-windows-x64-setup\.exe$"), ("Zip", r"-windows-x64\.zip$")]),
+    ("macOS (Apple silicon)", [("Disk image", r"-macos-arm64\.dmg$")]),
+    ("macOS (Intel)", [("Disk image", r"-macos-x86_64\.dmg$")]),
+    ("Linux (x86_64)", [("AppImage", r"-linux-x86_64\.AppImage$"), (".deb", r"_amd64\.deb$"),
+                        (".rpm", r"\.x86_64\.rpm$")]),
+    ("Linux (arm64)", [("AppImage", r"-linux-arm64\.AppImage$"), (".deb", r"_arm64\.deb$"),
+                       (".rpm", r"\.aarch64\.rpm$")]),
+]
+IMAGER_REPO = "https://github.com/roxora-os/imager"
+
+
+def render_imager(rel):
+    """The Roxora Imager page: the packages of its newest release, read from
+    GitHub when the site is built, and what each system asks on first start."""
+    if not rel or not rel["assets"]:
+        return card("release", "Downloads", empty_state(
+            "No release yet",
+            "Roxora Imager has not published any packages. When it does they are "
+            "listed here and on %s." % link(IMAGER_REPO + "/releases", "its releases page")))
+    assets = rel["assets"]
+    rows = []
+    for platform, kinds in IMAGER_PACKAGES:
+        found = []
+        for label, pattern in kinds:
+            a = next((a for a in assets if re.search(pattern, a["name"])), None)
+            if a:
+                found.append('%s<span class="meta">%s, %s</span>' % (
+                    link(a["url"], a["name"]), esc(label), esc(size(a["size"]))))
+        if found:
+            rows.append((platform, '<div class="pkg-list">%s</div>' % "".join(
+                '<div>%s</div>' % f for f in found)))
+    sums = next((a for a in assets if a["name"] == "SHA256SUMS"), None)
+    state = ("Pre-release. It has not been tested on hardware yet, and neither have the "
+             "Roxora images it writes." if rel["prerelease"]
+             else "Release.")
+    info = [("Released", esc(rel["date"])),
+            ("Status", esc(state)),
+            ("Release notes", link(rel["url"], "Release notes"))]
+    if sums:
+        info.append(("Checksums", '%s<span class="meta">SHA-256 of every file in the '
+                     'release. With the package in the same directory: '
+                     '<code>sha256sum -c --ignore-missing SHA256SUMS</code></span>'
+                     % link(sums["url"], "SHA256SUMS")))
+    info.append(("Code signing", "The Windows and macOS packages are not signed with a "
+                 "publisher's certificate yet. See the %s." % link(
+                     "/code-signing/", "code signing policy")))
+    out = [card("release", "Roxora Imager %s" % rel["tag"].lstrip("v"), kv(info), rail="Release"),
+           card("downloads", "Downloads", kv(rows))]
+    out.append(card("first-start", "First start", kv([
+        ("Windows", "Windows SmartScreen says <q>Windows protected your PC</q>, because the "
+         "installer is not signed. Choose <strong>More info</strong>, then "
+         "<strong>Run anyway</strong>."),
+        ("macOS", "The app is not notarized, so macOS says it cannot be opened. On macOS 15 "
+         "and later, open it once and choose <strong>Done</strong>, then in System Settings, "
+         "Privacy &amp; Security, choose <strong>Open Anyway</strong>. On macOS 14 and "
+         "earlier, right-click the app in Applications and choose <strong>Open</strong>."),
+        ("Linux", "Install the .deb or .rpm with the package manager, or make the AppImage "
+         "executable and run it. Writing an SD card asks for your password."),
+        ("More", "Drivers for writing a board over USB (Maskrom mode) and the udev rule "
+         "for the AppImage are in %s." % link(IMAGER_REPO + "/blob/main/docs/install.md",
+                                              "Installing Roxora Imager")),
+    ])))
+    out.append(card("web", "In the browser", content(
+        "<p>The same app runs in Chrome or Edge at %s. A browser cannot open a disk, so it "
+        "writes a board's eMMC or SPI flash over USB only, not an SD card in the "
+        "computer.</p>" % link(SITE + "/imager/", "roxora-os.github.io/imager"))))
+    return "\n".join(out)
+
+
 def read_releases():
     return json.loads((UPSTREAM / "releases.json").read_text(encoding="utf-8"))
 
@@ -354,13 +435,13 @@ def render_download(catalogs):
         "With both in the same directory:</p>" + code_block(
             "sha256sum -c %s.sha256" % esc(newest["images"][0]["file"])) +
         "<p>Write the <code>.img.xz</code> file to an SD card, USB drive, eMMC or NVMe as it "
-        "is; the bootloader is inside the image. %s can do this, and so can any tool that "
-        "writes compressed raw images. Some boards need a bootloader in their SPI flash "
+        "is; the bootloader is inside the image. %s and %s can do this, and so can any "
+        "tool that writes compressed raw images. Some boards need a bootloader in their SPI flash "
         "before they boot from an SD card: see %s.</p>"
         "<p>The first login, on the console or over SSH, is user <code>roxora</code> with "
         "the password <code>roxora</code>, and you are asked to choose a new password "
         "straight away.</p>"
-        % (link("/rpi-imager/", "Raspberry Pi Imager"),
+        % (link("/roxora-imager/", "Roxora Imager"), link("/rpi-imager/", "Raspberry Pi Imager"),
            link("/boards/#booting", "Booting from an SD card")))))
 
     older = catalogs[1:]
@@ -983,6 +1064,15 @@ def build():
                   "Download Roxora images, with their sizes, checksums and test status.",
                   ("All releases", BUILD_REPO + "/releases"),
                   render_download(catalogs)))
+    imager = read_imager()
+    pages.append(("roxora-imager", "/roxora-imager/", "Roxora Imager",
+                  with_synced("Version %s, pre-release" % imager["tag"].lstrip("v")
+                              if imager and imager["prerelease"] else
+                              "Version %s" % imager["tag"].lstrip("v") if imager else
+                              "No release yet"),
+                  "Download Roxora Imager, the app that downloads, checks and writes "
+                  "Roxora images.", ("All releases", IMAGER_REPO + "/releases"),
+                  render_imager(imager)))
     pages.append(("boards", "/boards/", "Boards", with_synced("%d supported" % len(boards)),
                   "The boards Roxora builds images for, with kernel branch, Ubuntu "
                   "release and test status.", None, render_boards(boards)))
