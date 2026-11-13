@@ -67,7 +67,9 @@ def describe(release, img):
     return ("Ubuntu %s (%s) with the Armbian %s kernel %s. Version %s%s. %s"
             % (img["ubuntu_version"], img["release"], img["branch"], img["kernel"],
                release["version"], ", pre-release" if release["prerelease"] else "",
-               status))
+               status)
+            + (" Needs UEFI firmware, such as edk2-rk3576, on the board."
+               if img.get("firmware") == "uefi" else ""))
 
 
 def make(catalogs, boards, site):

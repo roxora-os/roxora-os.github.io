@@ -68,6 +68,7 @@ TAGLINE = ("Plain Ubuntu for Rockchip single-board computers, on Armbian's kerne
            "and bootloaders.")
 # Build repository documents for developers rather than for people installing
 # Roxora. They are listed after the others on the Docs page.
+EDK2_RK3576 = "https://github.com/gahingwoo/edk2-rk3576"
 DEV_DOCS = ("adding-a-board", "release-contract", "architecture", "bsp-classification")
 # The Docs page lists the user guides in this order; the rest follow by name.
 GUIDE_ORDER = ("install", "hardware-test")
@@ -426,6 +427,13 @@ def render_download(catalogs):
                          % (link(spi["url"], spi["file"]), esc(size(spi["size"])),
                             esc(spi["sha256"]),
                             link("/boards/#booting", "Booting from an SD card"))))
+        if img.get("firmware") == "uefi":
+            # No U-Boot inside: the board's own UEFI firmware starts GRUB.
+            # Right under File: it decides whether the image is of any use.
+            rows.insert(1, ("Firmware", "This image has no bootloader of its own. The board "
+                         "needs UEFI firmware, such as %s, in its SPI flash first. See %s."
+                         % (link(EDK2_RK3576, "edk2-rk3576"),
+                            link("/boards/#booting", "Booting"))))
         cid = "image-%s-%s-%s" % (img["board"], img["release"], img["branch"])
         title = img["board_name"]
         if sum(1 for i in newest["images"] if i["board"] == img["board"]) > 1:
@@ -437,14 +445,15 @@ def render_download(catalogs):
         "With both in the same directory:</p>" + code_block(
             "sha256sum -c %s.sha256" % esc(newest["images"][0]["file"])) +
         "<p>Write the <code>.img.xz</code> file to an SD card, USB drive, eMMC or NVMe as it "
-        "is; the bootloader is inside the image. %s and %s can do this, and so can any "
-        "tool that writes compressed raw images. Some boards need a bootloader in their SPI flash "
-        "before they boot from an SD card: see %s.</p>"
+        "is. %s and %s can do this, and so can any tool that writes compressed raw images. "
+        "A board image has its bootloader inside, though some boards need one in their SPI "
+        "flash before they boot from an SD card; a UEFI image needs UEFI firmware on the "
+        "board. See %s.</p>"
         "<p>The first login, on the console or over SSH, is user <code>roxora</code> with "
         "the password <code>roxora</code>, and you are asked to choose a new password "
         "straight away.</p>"
         % (link("/roxora-imager/", "Roxora Imager"), link("/rpi-imager/", "Raspberry Pi Imager"),
-           link("/boards/#booting", "Booting from an SD card")))))
+           link("/boards/#booting", "Booting")))))
 
     older = catalogs[1:]
     if older:
@@ -470,13 +479,19 @@ def render_boards(boards):
                   [None, 15, 15, 30, 15])))
     body = "\n".join(groups)
     out = [card("boards", "Supported boards", body, rail="Supported boards")]
-    out.append(card("booting", "Booting from an SD card", kv([
+    out.append(card("booting", "Booting", kv([
         ("Radxa ROCK 4D", "The board's boot ROM never boots from an SD card: it looks at "
          "SPI flash, UFS and USB, in that order. U-Boot has to be in the SPI flash first; "
          "it then boots a Roxora SD card. %s" % link(
              "https://docs.radxa.com/en/rock4/rock4d", "Radxa ROCK 4D documentation")),
         ("ArmSoM CM5-IO", "Boots from eMMC first, then from the SD card. %s" % link(
             "https://docs.armsom.org/armsom-cm5-io", "ArmSoM CM5-IO documentation")),
+        ("RK3576 boards with UEFI firmware", "One image for any RK3576 board whose SPI "
+         "flash holds UEFI firmware, such as %s. The image has no U-Boot: the firmware "
+         "starts GRUB from the image's EFI system partition and hands the kernel the "
+         "board's device tree. Write the firmware first, following its own instructions, "
+         "then the image to an SD card, USB drive, eMMC or NVMe. It has booted in QEMU, "
+         "not yet on a board." % link(EDK2_RK3576, "edk2-rk3576")),
     ])))
     out.append(card("about-status", "What the status means", kv([
         ("Tested on hardware", "A maintainer has booted the image on the board and "
