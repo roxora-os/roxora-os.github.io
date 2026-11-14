@@ -20,8 +20,10 @@ choice:
 
 Only `board` is needed; the rest default to the newest release, the newest
 Ubuntu LTS, the command line image and the edge kernel. Without JavaScript the
-page lists every file of the newest release instead. Boards, the home page and
-Roxora Imager fold their details behind `<details>`, which needs no script.
+page lists every file of the newest release instead. Boards and Roxora Imager
+fold their details behind `<details>`, which needs no script. The Download
+page's board step and the Boards page share one search and vendor filter
+(`assets/board-filter.js`); without JavaScript the whole list shows.
 
 `tools/build.py` writes the site. The pages it generates have a module each
 (`tools/page_home.py`, `page_download.py`, `page_boards.py`, `page_imager.py`);
