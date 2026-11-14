@@ -47,6 +47,16 @@ SCHEMA_URL = ("https://raw.githubusercontent.com/raspberrypi/rpi-imager/%s/"
               "doc/json-schema/os-list-schema.json" % IMAGER_COMMIT)
 
 
+def ubuntu_order(version, branch="edge"):
+    """Sort key: the newest Ubuntu LTS first (the default to offer), then
+    newer Ubuntu before older, then the edge kernel before others. version
+    is "26.04" or "24.04"; LTS releases are April releases of even years."""
+    m = re.match(r"^(\d+)\.(\d+)", version or "")
+    year, month = (int(m.group(1)), int(m.group(2))) if m else (0, 0)
+    lts = month == 4 and year % 2 == 0
+    return (not lts, -(year * 100 + month), branch != "edge", branch)
+
+
 def newest_images(catalogs):
     """One image per board, Ubuntu release and kernel branch: the one from
     the newest release that has it. Catalogs arrive newest first."""
@@ -58,6 +68,7 @@ def newest_images(catalogs):
                 continue
             seen.add(key)
             out.append((cat["release"], img))
+    out.sort(key=lambda ri: (ri[1]["board"], ubuntu_order(ri[1].get("ubuntu_version"), ri[1]["branch"])))
     return out
 
 
@@ -92,7 +103,9 @@ def make(catalogs, boards, site):
                             "tags": [img["board"]], "matching_type": "exclusive",
                             "architecture": "armv8"})
         entries.append({
-            "name": "Roxora %s for %s" % (release["version"], img["board_name"]),
+            "name": "Roxora %s for %s, Ubuntu %s%s" % (
+                release["version"], img["board_name"], img["ubuntu_version"],
+                "" if img["branch"] == "edge" else ", %s kernel" % img["branch"]),
             "description": describe(release, img),
             "icon": site + "/assets/brand/roxora-mark-40.png",
             "website": site + "/download/",

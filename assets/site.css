@@ -689,8 +689,10 @@ code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--fam
      14px of inline code beside them; both take the body size here. */
   --pf-v6-c-code-block__pre--FontSize: var(--pf-t--global--font--size--body--default);
 }
-.pf-v6-c-code-block__pre { overflow-x: auto; }
-.pf-v6-c-code-block__code { white-space: pre; overflow-wrap: normal; }
+/* Commands wrap instead of scrolling, so a long one (the install script's
+   URL, a sha256sum line) is never cut off at the card's edge. */
+.pf-v6-c-code-block__pre { overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+.pf-v6-c-code-block__code { white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .pf-v6-c-card .pf-v6-c-table { --pf-v6-c-table--BackgroundColor: transparent; }
 /* The table's own cell padding steps in from the card's edge; the first and

@@ -87,7 +87,7 @@ DOC_SUMMARY = {
 # missing here is shown as it is.
 UBUNTU = {"jammy": ("22.04", True), "noble": ("24.04", True),
           "plucky": ("25.04", False), "questing": ("25.10", False),
-          "resolute": ("26.04", True)}
+          "resolute": ("26.04", True), "stonking": ("26.10", False)}
 
 # The footer's own columns, as gahingwoo.com has them. A page not built is
 # left out.
@@ -296,9 +296,12 @@ def render_imager(rel):
             rows.append((platform, '<div class="pkg-list">%s</div>' % "".join(
                 '<div>%s</div>' % f for f in found)))
     sums = next((a for a in assets if a["name"] == "SHA256SUMS"), None)
-    state = ("Pre-release. It has not been tested on hardware yet, and neither have the "
-             "Roxora images it writes." if rel["prerelease"]
-             else "Release.")
+    # What has been tried on real hardware; keep this in step with the
+    # hardware test reports (docs/hardware-test.md in roxora-os/build).
+    state = ("Pre-release. Writing an SD card has been tested on macOS with 0.1.3: the "
+             "card was written and read back correctly. Windows, Linux and writing a "
+             "board over USB (Maskrom) have not been tested on hardware yet."
+             if rel["prerelease"] else "Release.")
     info = [("Released", esc(rel["date"])),
             ("Status", esc(state)),
             ("Release notes", link(rel["url"], "Release notes"))]
@@ -311,6 +314,16 @@ def render_imager(rel):
                  "publisher's certificate yet. See the %s." % link(
                      "/code-signing/", "code signing policy")))
     out = [card("release", "Roxora Imager %s" % rel["tag"].lstrip("v"), kv(info), rail="Release"),
+           card("install", "Install", kv([
+               ("macOS and Linux", "The install script picks the package for the system, "
+                "checks it against the SHA-256 GitHub publishes for it and installs it:%s"
+                % code_block("curl -fsSL https://raw.githubusercontent.com/roxora-os/imager/main/install.sh | sh")),
+               ("Homebrew (macOS)", code_block(
+                   "brew trust gahingwoo/tap\nbrew install --cask gahingwoo/tap/roxora-imager")
+                + '<span class="meta">Update with <code>brew upgrade --cask roxora-imager</code>; '
+                'the app does not update itself.</span>'),
+               ("By hand", "One of the packages below."),
+           ]), rail="Install"),
            card("downloads", "Downloads", kv(rows))]
     out.append(card("first-start", "First start", kv([
         ("Windows", "Windows SmartScreen says <q>Windows protected your PC</q>, because the "
@@ -404,7 +417,9 @@ def render_download(catalogs):
     ] + ([("How to install", link("/docs/install/", "Installing Roxora"))]
          if (UPSTREAM / "docs" / "install.md").is_file() else [])), rail="Release")]
 
-    for img in newest["images"]:
+    for img in sorted(newest["images"], key=lambda i: (
+            [x["board"] for x in newest["images"]].index(i["board"]),
+            os_list.ubuntu_order(i.get("ubuntu_version"), i["branch"]))):
         rows = [
             ("File", '<a href="%s">%s</a>' % (esc(img["url"]), esc(img["file"]))),
             ("Size", '%s<span class="meta">%s bytes compressed, %s written to the card</span>'
@@ -426,7 +441,7 @@ def render_download(catalogs):
                          'the card. See %s.</span>'
                          % (link(spi["url"], spi["file"]), esc(size(spi["size"])),
                             esc(spi["sha256"]),
-                            link("/boards/#booting", "Booting from an SD card"))))
+                            link("/boards/#booting", "Booting"))))
         if img.get("firmware") == "uefi":
             # No U-Boot inside: the board's own UEFI firmware starts GRUB.
             # Right under File: it decides whether the image is of any use.
@@ -437,7 +452,7 @@ def render_download(catalogs):
         cid = "image-%s-%s-%s" % (img["board"], img["release"], img["branch"])
         title = img["board_name"]
         if sum(1 for i in newest["images"] if i["board"] == img["board"]) > 1:
-            title += " (%s, %s)" % (img["release"], img["branch"])
+            title += " (Ubuntu %s, %s)" % (img.get("ubuntu_version") or img["release"], img["branch"])
         out.append(card(cid, title, kv(rows), rail=title))
 
     out.append(card("check", "Checking and writing an image", content(
@@ -472,7 +487,9 @@ def render_boards(boards):
     for vendor in dict.fromkeys(b["vendor"] for b in boards):
         rows = [[esc(b["name"]), esc(b["soc"].upper()), esc(b["branch"]),
                  esc(ubuntu(b["release"])), esc(short.get(b["status"], b["status"]))]
-                for b in boards if b["vendor"] == vendor]
+                for b in sorted((b for b in boards if b["vendor"] == vendor), key=lambda b: (
+                    [x["board"] for x in boards].index(b["board"]),
+                    os_list.ubuntu_order(UBUNTU.get(b["release"], ("", False))[0], b["branch"])))]
         groups.append('<div class="pf-v6-c-content%s"><h3>%s</h3></div>\n%s' % (
             " pf-v6-u-mt-lg" if groups else "", esc(vendor),
             table("boards-table doc-table", ["Board", "SoC", "Kernel", "Ubuntu", "Status"], rows,
@@ -498,8 +515,9 @@ def render_boards(boards):
          "run the hardware test."),
         ("CI only", "The image builds and passes the automatic image checks in CI. "
          "Nobody has booted it on the board yet."),
-        ("Kernel", "Armbian's kernel branch. %s follows recent mainline kernels."
-         % "<code>edge</code>"),
+        ("Kernel", "Armbian's kernel branch. %s follows recent mainline kernels; "
+         "%s is Rockchip's own kernel (Linux 6.1), offered for the UEFI image."
+         % ("<code>edge</code>", "<code>vendor</code>")),
         ("Source", "This list is %s in the build repository." % link(
             BUILD_REPO + "/blob/main/boards.conf", "boards.conf")),
     ])))
@@ -1092,7 +1110,7 @@ def build():
                   "Download Roxora Imager, the app that downloads, checks and writes "
                   "Roxora images.", ("All releases", IMAGER_REPO + "/releases"),
                   render_imager(imager)))
-    pages.append(("boards", "/boards/", "Boards", with_synced("%d supported" % len(boards)),
+    pages.append(("boards", "/boards/", "Boards", with_synced("%d boards, %d images" % (len(dict.fromkeys(b["board"] for b in boards)), len(boards))),
                   "The boards Roxora builds images for, with kernel branch, Ubuntu "
                   "release and test status.", None, render_boards(boards)))
     pages.append(("rpi-imager", "/rpi-imager/", "Raspberry Pi Imager", "Writing Roxora with Imager",
