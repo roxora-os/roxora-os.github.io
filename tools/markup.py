@@ -13,7 +13,7 @@
 # this program; if not, see <https://www.gnu.org/licenses/>.
 """Markup and wording the pages share: the site's constants, PatternFly
 pieces (cards, key/value rows, tables, labels) and how a size, an Ubuntu
-release or a status is written."""
+release or a date is written."""
 
 import html
 import pathlib
@@ -111,28 +111,8 @@ def label(text, color="", outline=False):
             '<span class="pf-v6-c-label__text">%s</span></span></span>' % (cls, esc(text)))
 
 
-def status_label(status):
-    """An image's test status. Green only for an image a maintainer has
-    booted on the board."""
-    if status == "hardware-tested":
-        return label(board_status(status), "green")
-    return label(board_status(status), outline=True)
-
-
 def beta_label():
     return label("Beta", "orange")
-
-
-def tested_summary(statuses):
-    """The label for several images together (a board, a release). It never
-    says more than the images do."""
-    statuses = list(statuses)
-    tested = sum(1 for s in statuses if s == "hardware-tested")
-    if statuses and tested == len(statuses):
-        return status_label("hardware-tested")
-    if tested:
-        return label("%d of %d tested on hardware" % (tested, len(statuses)), "green", outline=True)
-    return status_label("ci-only")
 
 
 def fold(summary, body, fid=None, opened=False, search=None, cls=""):
@@ -266,10 +246,6 @@ def size(n):
         if n >= div:
             return "%.1f %s" % (n / div, unit)
     return "%d bytes" % n
-
-
-def board_status(status):
-    return {"hardware-tested": "Tested on hardware", "ci-only": "Checked in CI"}.get(status, status)
 
 
 def date(iso):

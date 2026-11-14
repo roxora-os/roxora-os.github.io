@@ -100,14 +100,11 @@ def newest_images(catalogs):
 
 
 def describe(release, img):
-    status = ("Tested on hardware." if img["status"] == "hardware-tested"
-              else "Built and checked in CI, not yet tested on hardware.")
-    return ("Ubuntu %s (%s)%s with the Armbian %s kernel %s. Version %s%s. %s"
+    return ("Ubuntu %s (%s)%s with the Armbian %s kernel %s. Version %s%s."
             % (img["ubuntu_version"], img["release"],
                "" if flavor(img) == "cli" else ", " + flavor_name(img, sentence=True) + ",",
                img["branch"], img["kernel"],
-               release["version"], ", pre-release" if release["prerelease"] else "",
-               status)
+               release["version"], ", pre-release" if release["prerelease"] else "")
             + (" Needs UEFI firmware, such as edk2-rk3576, on the board."
                if img.get("firmware") == "uefi" else ""))
 

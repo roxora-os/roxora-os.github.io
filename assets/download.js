@@ -189,10 +189,7 @@
       img.flavorName + ', ' + img.kernel + ' kernel ' + img.kernelVersion;
     var labels = $('dl-labels');
     labels.textContent = '';
-    var status = data.status[img.status] || [img.status, ''];
-    labels.appendChild(label(status[0], img.status === 'hardware-tested' ? 'pf-m-green' : 'pf-m-outline'));
     if (rel.beta) labels.appendChild(label('Beta', 'pf-m-orange'));
-    $('dl-status').textContent = status[1];
     $('dl-beta').hidden = !rel.beta;
 
     $('dl-spi').hidden = !img.spi;

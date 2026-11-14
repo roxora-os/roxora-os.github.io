@@ -20,7 +20,7 @@ Download page with the board already chosen.
 
 import os_list
 from markup import (BUILD_REPO, EDK2_RK3576, UBUNTU, button, card, esc, fold, kv, link,
-                    status_label, table, tested_summary)
+                    table)
 
 # What a board needs before a Roxora image boots on it, and its maker's
 # documentation. Keep this in step with docs/install.md of roxora-os/build.
@@ -70,17 +70,13 @@ def versions(rows):
 def board_fold(board, rows, downloadable):
     b = rows[0]
     # One table row per Ubuntu release and kernel branch; its flavors share
-    # the Images cell, grouped by status.
+    # the Images cell.
     images = {}
     for r in rows:
         images.setdefault((r["release"], r["branch"]), []).append(r)
     trs = []
     for (release, branch), same in images.items():
-        cell = "".join(
-            '<span class="status-group">%s %s</span>' % (
-                esc(", ".join(os_list.flavor_name(i) for i in same if i["status"] == status)),
-                status_label(status))
-            for status in dict.fromkeys(i["status"] for i in same))
+        cell = esc(", ".join(os_list.flavor_name(i) for i in same))
         trs.append([esc("Ubuntu " + ubuntu_short(release)), esc(branch), cell])
     note, docs = BOARD_NOTES.get(board, ("", None))
     body = table("board-images", ["Ubuntu", "Kernel", "Images"], trs, [30, 20, None], stack="sm")
@@ -97,9 +93,7 @@ def board_fold(board, rows, downloadable):
     summary = ('<span class="board-row__name">%s</span>'
                '<span class="board-row__meta">%s, %s</span>'
                '<span class="board-row__images">Ubuntu %s</span>'
-               '<span class="board-row__status">%s</span>'
-               % (esc(b["name"]), esc(b["soc"].upper()), esc(b["vendor"]), esc(versions(rows)),
-                  tested_summary(r["status"] for r in rows)))
+               % (esc(b["name"]), esc(b["soc"].upper()), esc(b["vendor"]), esc(versions(rows))))
     return fold(summary, body, fid=board, search=b["name"], cls="board-row")
 
 
@@ -111,10 +105,6 @@ def render(boards, downloadable):
                     board_fold(board, rows, downloadable) for board, rows in grouped.items()),
                 rail=False)]
     out.append(card("about-status", "What the words mean", kv([
-        ("Tested on hardware", "A maintainer has booted the image on the board and "
-         "run the %s." % link("/docs/hardware-test/", "hardware test")),
-        ("Checked in CI", "The image builds and passes the automatic image checks in CI. "
-         "Nobody has booted it on the board yet."),
         ("Images", "Command line images have no desktop. GNOME images start Ubuntu's GNOME "
          "desktop: the minimal one is Ubuntu's <code>ubuntu-desktop-minimal</code> (the "
          "desktop, Firefox and the basic tools), the other the full "

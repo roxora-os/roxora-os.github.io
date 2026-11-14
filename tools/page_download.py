@@ -39,7 +39,7 @@ import json
 import os_list
 from markup import (BUILD_REPO, CARET, EDK2_RK3576, UBUNTU, alert, beta_label, card,
                     code_block, content, copyable, date, empty_state, esc, fold, kv, link, size,
-                    status_label, table, tested_summary)
+                    table)
 
 # What the page says about an image's flavor.
 FLAVOR_ABOUT = {
@@ -125,7 +125,7 @@ def chooser_data(offer):
                 "kernel": img["branch"], "kernelVersion": img["kernel"],
                 "file": img["file"], "url": img["url"], "size": size(img["size"]),
                 "written": size(img["extract_size"]), "sha256": img["sha256"],
-                "status": img["status"], "anchor": anchor(img),
+                "anchor": anchor(img),
             }
             if img.get("verify_url"):
                 entry["verify"] = img["verify_url"]
@@ -147,14 +147,6 @@ def chooser_data(offer):
         "ubuntus": ordered(ubuntus), "flavors": ordered(flavors),
         "kernels": [k for k, _ in ordered(kernels)],
         "images": images,
-        "status": {
-            "hardware-tested": ["Tested on hardware",
-                                "A maintainer has booted this image on the board and run the "
-                                "hardware test."],
-            "ci-only": ["Checked in CI",
-                        "Built and checked automatically in CI. Nobody has booted this image "
-                        "on a board yet, so keep a way back."],
-        },
     }
 
 
@@ -191,13 +183,11 @@ def board_step(offer):
             '<th class="pf-v6-c-table__th board-name" scope="row">%(name)s'
             '<span class="meta board-soc">%(soc)s</span></th>'
             '<td class="pf-v6-c-table__td board-soc-col">%(soc)s</td>'
-            '<td class="pf-v6-c-table__td">Ubuntu %(versions)s'
-            '<span class="meta">%(status)s%(beta)s</span></td></tr>' % dict(
+            '<td class="pf-v6-c-table__td">Ubuntu %(versions)s%(beta)s</td></tr>' % dict(
                 id=esc(board), vendor=esc(first["vendor"]), name=esc(first["board_name"]),
                 soc=esc(first["soc"].upper()),
                 search=esc(" ".join([first["board_name"], first["vendor"], first["soc"], board]).lower()),
-                versions=esc(", ".join(versions)), beta=beta,
-                status=tested_summary(i["status"] for i in mine)))
+                versions=esc(", ".join(versions)), beta=beta))
 
     vendor_items = [("", "All vendors", len(boards))] + [(v, v, n) for v, n in vendors.items()]
     vendor_list = "".join(
@@ -297,7 +287,6 @@ def result_step():
         '<div class="result">\n'
         '<p class="result-name" id="dl-name"></p>\n'
         '<p class="result-sub"><span id="dl-sub"></span> <span class="result-labels" id="dl-labels"></span></p>\n'
-        '<p class="meta" id="dl-status"></p>\n'
         '%s\n%s\n%s\n'
         '<div class="result-action">'
         '<a class="pf-v6-c-button pf-m-primary pf-m-display-lg download-link" id="dl-button" href="%s">'
@@ -360,9 +349,8 @@ def files_table(cat):
             '<a class="hash download-link" href="%s">%s</a><span class="meta hash">SHA-256 %s</span>%s'
             % (esc(img["url"]), esc(img["file"]), esc(img["sha256"]), extra),
             esc(size(img["size"])),
-            status_label(img["status"]),
         ]))
-    return table("files-table", ["Image", "File", "Size", "Status"], rows, stack="lg")
+    return table("files-table", ["Image", "File", "Size"], rows, stack="lg")
 
 
 def release_line(cat):
@@ -378,10 +366,8 @@ def files_card(catalogs, offer):
         rel = cat["release"]
         summary = "%s<span class=\"fold__meta\">%s, %d images</span>" % (
             esc(release_line(cat)), esc(date(rel["date"])), len(cat["images"]))
-        about = ('<p class="meta files-about">%s %s, %s.</p>' % (
-            "A beta: it is what comes next and may change." if rel["prerelease"] else
-            "Every image passed the automatic checks in CI. The status says which have "
-            "also been booted on the board.",
+        about = ('<p class="meta files-about">%s%s, %s.</p>' % (
+            "A beta: it is what comes next and may change. " if rel["prerelease"] else "",
             link(rel["url"], "Release notes"),
             link("/catalog/%s.json" % rel["tag"], "catalog")))
         folds.append(fold(summary, about + files_table(cat), fid="files-" + rel["tag"],
