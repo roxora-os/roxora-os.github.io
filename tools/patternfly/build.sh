@@ -34,7 +34,7 @@ COMPONENTS="Page/page Masthead/masthead Button/button Card/card Backdrop/backdro
             InputGroup/input-group TextInputGroup/text-input-group Menu/menu \
             AboutModalBox/about-modal-box Label/label ToggleGroup/toggle-group \
             Alert/alert Radio/radio FormControl/form-control SimpleList/simple-list \
-            ClipboardCopy/clipboard-copy"
+            ClipboardCopy/clipboard-copy Hero/hero"
 LAYOUTS="Grid/grid Bullseye/bullseye Gallery/gallery"
 
 OUT=assets/patternfly
