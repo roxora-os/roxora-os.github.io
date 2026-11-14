@@ -1004,7 +1004,7 @@ html.pf-v6-theme-dark .home-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
 .home-release {
   --pf-v6-c-description-list--RowGap: var(--pf-t--global--spacer--lg);
   --pf-v6-c-description-list--ColumnGap: var(--pf-t--global--spacer--lg);
-  --pf-v6-c-description-list--GridTemplateColumns--min: 7.5rem;
+  --pf-v6-c-description-list--m-auto-fit--GridTemplateColumns--min: 7.5rem;
 }
 .home-release .pf-v6-c-description-list__text { font-size: 1rem; }
 

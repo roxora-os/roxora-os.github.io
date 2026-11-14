@@ -264,16 +264,13 @@ def build():
                             for src in PAGE_SCRIPTS.get(directory, [])),
             noindex='<meta name="robots" content="noindex">\n' if (sample or directory == "404") else "",
             nav=render_nav(current, have),
-            # The home page is a landing page: its sections are its own, it
-            # has no page head, and the sidebar starts folded on a wide
-            # screen (the masthead toggle still opens it). Its first screen
-            # carries Download, so the masthead does not repeat it.
+            # The home page is a landing page: its sections are its own and
+            # it has no page head. Its first screen carries Download, so the
+            # masthead does not repeat it.
             sections=nobreak(body) if home else doc_section(
                 esc(heading), render_rail(rail), page_head(heading, subtitle, action),
                 nobreak(body)),
             maincls="home-page" if home else "doc-page" + (" with-rail" if rail else ""),
-            sidebarcls=" pf-m-collapsed" if home else "",
-            sidebarattrs=" data-wide-closed" if home else "",
             download_btn="" if directory in ("download", "") else (
                 '      <a class="pf-v6-c-button pf-m-primary masthead-give" href="/download/">'
                 '<span class="pf-v6-c-button__text">Download</span></a>\n'),

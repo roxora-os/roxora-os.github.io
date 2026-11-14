@@ -266,7 +266,7 @@ SHELL = """<!DOCTYPE html>
 %(download_btn)s    </div>
   </header>
   <div class="pf-v6-c-backdrop site-backdrop" id="site-backdrop" hidden></div>
-  <aside class="pf-v6-c-page__sidebar%(sidebarcls)s" id="site-sidebar"%(sidebarattrs)s>
+  <aside class="pf-v6-c-page__sidebar" id="site-sidebar">
     <div class="pf-v6-c-page__sidebar-main">
       <div class="pf-v6-c-page__sidebar-body pf-m-page-insets">
         <nav class="pf-v6-c-nav" aria-label="Site">
