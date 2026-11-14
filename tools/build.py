@@ -371,11 +371,11 @@ def render_status(boards, catalogs):
         newest = catalogs[0]
         tested = [i for i in newest["images"] if i["status"] == "hardware-tested"]
         if not tested:
-            status = ("Early. Images are built and checked in CI, but none has been "
-                      "tested on hardware yet. Releases are pre-releases until they have.")
+            status = ("Early. Every image is built and checked in CI; none has been "
+                      "tested on hardware yet.")
         elif len(tested) < len(newest["images"]):
-            status = ("Early. Some images have been tested on hardware; the rest are "
-                      "built and checked in CI only. The Download page says which.")
+            status = ("Early. Every image is built and checked in CI, and some have also "
+                      "been tested on hardware. The Download page says which.")
         else:
             status = "Every image in the newest release has been tested on hardware."
     rows = [("Stage", esc(status)),
@@ -400,12 +400,16 @@ def render_download(catalogs):
 
     newest = catalogs[0]
     rel = newest["release"]
-    if rel["prerelease"]:
-        state = ("Pre-release. Images marked CI only build and pass the image checks in "
-                 "CI but have not been booted on hardware yet. A release stays a "
-                 "pre-release until every image in it has been tested on hardware.")
-    else:
-        state = "Release. Every image in it has been tested on hardware."
+    # A release: every image passed the checks in CI (and the QEMU boot for
+    # UEFI images). A beta is a GitHub pre-release. Hardware testing is
+    # shown per image.
+    tested = sum(1 for i in newest["images"] if i["status"] == "hardware-tested")
+    state = ("Beta. Try it if you want what comes next; the newest release is the safer choice. "
+             if rel["prerelease"] else "Release. ")
+    state += ("Every image passed the automatic checks in CI. %s"
+              % ("All of them have also been tested on hardware." if tested == len(newest["images"])
+                 else "Images marked Tested on hardware have also been booted on the board; "
+                      "the others have not yet."))
     out = [card("release", "Roxora %s" % rel["version"], kv([
         ("Released", esc(rel["date"])),
         ("Status", esc(state)),
