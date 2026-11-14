@@ -389,6 +389,14 @@ def render_status(boards, catalogs):
     return kv(rows)
 
 
+# What the Download page says about an image's flavor.
+FLAVOR_ABOUT = {
+    "cli": "Command line, no desktop",
+    "gnome-minimal": "Minimal GNOME desktop (ubuntu-desktop-minimal)",
+    "gnome": "GNOME desktop (ubuntu-desktop)",
+}
+
+
 def render_download(catalogs):
     if not catalogs:
         return card("releases", "Releases", empty_state(
@@ -419,13 +427,15 @@ def render_download(catalogs):
 
     for img in sorted(newest["images"], key=lambda i: (
             [x["board"] for x in newest["images"]].index(i["board"]),
-            os_list.ubuntu_order(i.get("ubuntu_version"), i["branch"]))):
+            os_list.ubuntu_order(i.get("ubuntu_version"), i["branch"]),
+            os_list.flavor_order(i))):
         rows = [
             ("File", '<a href="%s">%s</a>' % (esc(img["url"]), esc(img["file"]))),
             ("Size", '%s<span class="meta">%s bytes compressed, %s written to the card</span>'
              % (esc(size(img["size"])), "{:,}".format(img["size"]), esc(size(img["extract_size"])))),
             ("SHA-256", '<code class="hash">%s</code>' % esc(img["sha256"])),
             ("Ubuntu", esc(ubuntu(img["release"]))),
+            ("Image", esc(FLAVOR_ABOUT.get(os_list.flavor(img), os_list.flavor_name(img)))),
             ("Kernel", esc("%s, Armbian %s branch" % (img["kernel"], img["branch"]))),
             ("Status", esc(board_status(img["status"]))),
         ]
@@ -449,10 +459,19 @@ def render_download(catalogs):
                          "needs UEFI firmware, such as %s, in its SPI flash first. See %s."
                          % (link(EDK2_RK3576, "edk2-rk3576"),
                             link("/boards/#booting", "Booting"))))
-        cid = "image-%s-%s-%s" % (img["board"], img["release"], img["branch"])
+        # A command line image keeps the anchor it had before the desktop
+        # images existed. The flavor is in the title when the board has
+        # desktop images in this release.
+        fl = os_list.flavor(img)
+        cid = "image-%s-%s-%s%s" % (img["board"], img["release"], img["branch"],
+                                    "" if fl == "cli" else "-" + fl)
         title = img["board_name"]
-        if sum(1 for i in newest["images"] if i["board"] == img["board"]) > 1:
-            title += " (Ubuntu %s, %s)" % (img.get("ubuntu_version") or img["release"], img["branch"])
+        same_board = [i for i in newest["images"] if i["board"] == img["board"]]
+        if len(same_board) > 1:
+            title += " (Ubuntu %s, %s%s)" % (
+                img.get("ubuntu_version") or img["release"], img["branch"],
+                ", " + os_list.flavor_name(img, sentence=True)
+                if any(os_list.flavor(i) != "cli" for i in same_board) else "")
         out.append(card(cid, title, kv(rows), rail=title))
 
     out.append(card("check", "Checking and writing an image", content(
@@ -464,7 +483,8 @@ def render_download(catalogs):
         "A board image has its bootloader inside, though some boards need one in their SPI "
         "flash before they boot from an SD card; a UEFI image needs UEFI firmware on the "
         "board. See %s.</p>"
-        "<p>The first login, on the console or over SSH, is user <code>roxora</code> with "
+        "<p>The first login, on the console, over SSH or on the login screen of a desktop "
+        "image, is user <code>roxora</code> with "
         "the password <code>roxora</code>, and you are asked to choose a new password "
         "straight away.</p>"
         % (link("/roxora-imager/", "Roxora Imager"), link("/rpi-imager/", "Raspberry Pi Imager"),
@@ -485,15 +505,30 @@ def render_boards(boards):
     short = {"hardware-tested": "Tested on hardware", "ci-only": "CI only"}
     groups = []
     for vendor in dict.fromkeys(b["vendor"] for b in boards):
-        rows = [[esc(b["name"]), esc(b["soc"].upper()), esc(b["branch"]),
-                 esc(ubuntu(b["release"])), esc(short.get(b["status"], b["status"]))]
-                for b in sorted((b for b in boards if b["vendor"] == vendor), key=lambda b: (
-                    [x["board"] for x in boards].index(b["board"]),
-                    os_list.ubuntu_order(UBUNTU.get(b["release"], ("", False))[0], b["branch"])))]
+        # One row per board, kernel branch and Ubuntu release; its images
+        # (boards.conf has a line per flavor) share the last cell, grouped
+        # by status.
+        images = {}
+        for b in boards:
+            if b["vendor"] == vendor:
+                images.setdefault((b["board"], b["branch"], b["release"]), []).append(b)
+        rows = []
+        for group in sorted(images.values(), key=lambda g: (
+                [x["board"] for x in boards].index(g[0]["board"]),
+                os_list.ubuntu_order(UBUNTU.get(g[0]["release"], ("", False))[0], g[0]["branch"]))):
+            b = group[0]
+            group.sort(key=os_list.flavor_order)
+            cell = "".join(
+                '%s<span class="meta">%s</span>' % (
+                    esc(", ".join(os_list.flavor_name(i) for i in group if i["status"] == status)),
+                    esc(short.get(status, status)))
+                for status in dict.fromkeys(i["status"] for i in group))
+            rows.append([esc(b["name"]), esc(b["soc"].upper()), esc(b["branch"]),
+                         esc(ubuntu(b["release"])), cell])
         groups.append('<div class="pf-v6-c-content%s"><h3>%s</h3></div>\n%s' % (
             " pf-v6-u-mt-lg" if groups else "", esc(vendor),
-            table("boards-table doc-table", ["Board", "SoC", "Kernel", "Ubuntu", "Status"], rows,
-                  [None, 15, 15, 30, 15])))
+            table("boards-table doc-table", ["Board", "SoC", "Kernel", "Ubuntu", "Images"], rows,
+                  [None, 15, 15, 20, 25])))
     body = "\n".join(groups)
     out = [card("boards", "Supported boards", body, rail="Supported boards")]
     out.append(card("booting", "Booting", kv([
@@ -515,6 +550,10 @@ def render_boards(boards):
          "run the hardware test."),
         ("CI only", "The image builds and passes the automatic image checks in CI. "
          "Nobody has booted it on the board yet."),
+        ("Images", "Command line images have no desktop. GNOME images start Ubuntu's GNOME "
+         "desktop: the minimal one is Ubuntu's <code>ubuntu-desktop-minimal</code> (the "
+         "desktop, Firefox and the basic tools), the other the full "
+         "<code>ubuntu-desktop</code> with the office and media applications."),
         ("Kernel", "Armbian's kernel branch. %s follows recent mainline kernels; "
          "%s is Rockchip's own kernel (Linux 6.1), offered for the UEFI image."
          % ("<code>edge</code>", "<code>vendor</code>")),

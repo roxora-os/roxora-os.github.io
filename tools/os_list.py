@@ -57,26 +57,55 @@ def ubuntu_order(version, branch="edge"):
     return (not lts, -(year * 100 + month), branch != "edge", branch)
 
 
+# Image flavors (images[].flavor in the catalog, FLAVOR in boards.conf), in
+# the order they are listed: the name for a title and the one for a sentence.
+# A catalog or boards.conf from before the desktop images has no flavor;
+# those images are command line images.
+FLAVORS = {
+    "cli": ("Command line", "command line"),
+    "gnome-minimal": ("GNOME minimal", "minimal GNOME desktop"),
+    "gnome": ("GNOME", "GNOME desktop"),
+}
+
+
+def flavor(item):
+    """The flavor of a catalog image or a boards.conf row."""
+    return item.get("flavor") or "cli"
+
+
+def flavor_name(item, sentence=False):
+    f = flavor(item)
+    return FLAVORS.get(f, (f, f))[1 if sentence else 0]
+
+
+def flavor_order(item):
+    f = flavor(item)
+    return list(FLAVORS).index(f) if f in FLAVORS else len(FLAVORS)
+
+
 def newest_images(catalogs):
-    """One image per board, Ubuntu release and kernel branch: the one from
-    the newest release that has it. Catalogs arrive newest first."""
+    """One image per board, Ubuntu release, kernel branch and flavor: the
+    one from the newest release that has it. Catalogs arrive newest first."""
     seen, out = set(), []
     for cat in catalogs:
         for img in cat["images"]:
-            key = (img["board"], img["release"], img["branch"])
+            key = (img["board"], img["release"], img["branch"], flavor(img))
             if key in seen:
                 continue
             seen.add(key)
             out.append((cat["release"], img))
-    out.sort(key=lambda ri: (ri[1]["board"], ubuntu_order(ri[1].get("ubuntu_version"), ri[1]["branch"])))
+    out.sort(key=lambda ri: (ri[1]["board"], ubuntu_order(ri[1].get("ubuntu_version"), ri[1]["branch"]),
+                             flavor_order(ri[1])))
     return out
 
 
 def describe(release, img):
     status = ("Tested on hardware." if img["status"] == "hardware-tested"
               else "Built and checked in CI, not yet tested on hardware.")
-    return ("Ubuntu %s (%s) with the Armbian %s kernel %s. Version %s%s. %s"
-            % (img["ubuntu_version"], img["release"], img["branch"], img["kernel"],
+    return ("Ubuntu %s (%s)%s with the Armbian %s kernel %s. Version %s%s. %s"
+            % (img["ubuntu_version"], img["release"],
+               "" if flavor(img) == "cli" else ", " + flavor_name(img, sentence=True) + ",",
+               img["branch"], img["kernel"],
                release["version"], ", pre-release" if release["prerelease"] else "",
                status)
             + (" Needs UEFI firmware, such as edk2-rk3576, on the board."
@@ -103,9 +132,12 @@ def make(catalogs, boards, site):
                             "tags": [img["board"]], "matching_type": "exclusive",
                             "architecture": "armv8"})
         entries.append({
-            "name": "Roxora %s for %s, Ubuntu %s%s" % (
+            # A command line image keeps the name it had before the desktop
+            # images existed.
+            "name": "Roxora %s for %s, Ubuntu %s%s%s" % (
                 release["version"], img["board_name"], img["ubuntu_version"],
-                "" if img["branch"] == "edge" else ", %s kernel" % img["branch"]),
+                "" if img["branch"] == "edge" else ", %s kernel" % img["branch"],
+                "" if flavor(img) == "cli" else ", " + flavor_name(img, sentence=True)),
             "description": describe(release, img),
             "icon": site + "/assets/brand/roxora-mark-40.png",
             "website": site + "/download/",

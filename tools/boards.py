@@ -23,7 +23,9 @@ with BOARD and ends with NAME, for example
 and that line is what this parser follows. Counting fields cannot tell the
 columns apart, because NAME is the rest of the line and holds spaces of its
 own ("Radxa ROCK 4D"). Every column but NAME is one word. VENDOR is optional:
-a file written before it existed gets the first word of NAME instead.
+a file written before it existed gets the first word of NAME instead. So is
+FLAVOR (cli, gnome-minimal, gnome): a file written before the desktop images
+has command line images only, and its rows get cli.
 
 A file without that header, without a column the site needs, with a line
 that has too few fields, or with a NAME that does not start with its VENDOR
@@ -38,7 +40,7 @@ REQUIRED = ("BOARD", "BRANCH", "RELEASE", "STATUS", "SOC", "NAME")
 
 def parse(text, where="boards.conf"):
     """Rows of boards.conf as dicts with lower-case keys: board, branch,
-    release, status, soc, vendor, name."""
+    release, flavor, status, soc, vendor, name."""
     columns, rows = None, []
     for number, raw in enumerate(text.splitlines(), 1):
         line = raw.strip()
@@ -70,6 +72,7 @@ def parse(text, where="boards.conf"):
             sys.exit("%s:%d: NAME %r does not start with VENDOR %r: %r"
                      % (where, number, row["name"], row["vendor"], raw))
         row.setdefault("vendor", row["name"].split()[0])
+        row.setdefault("flavor", "cli")
         rows.append(row)
     if columns is None:
         sys.exit("%s: no '# BOARD ... NAME' header line naming the columns" % where)
@@ -80,4 +83,4 @@ if __name__ == "__main__":
     if len(sys.argv) != 2:
         sys.exit(__doc__)
     for r in parse(open(sys.argv[1], encoding="utf-8").read(), sys.argv[1]):
-        print("%(vendor)-8s %(board)-16s %(branch)-6s %(release)-8s %(status)-15s %(soc)-7s %(name)s" % r)
+        print("%(vendor)-8s %(board)-20s %(branch)-6s %(release)-8s %(flavor)-13s %(status)-15s %(soc)-7s %(name)s" % r)
