@@ -1003,3 +1003,9 @@ a.board-card:hover, a.board-card:focus-visible { --pf-v6-c-card--BorderColor: va
 .platforms[data-mine] .platform:not(.is-mine) { display: none; }
 .platforms[data-mine] .platform.is-mine { border-block-start: 0; padding-block: var(--pf-t--global--spacer--xs) 0; }
 .platforms[data-mine] .platform.is-mine .platform__name { font-size: 1.25rem; }
+
+/* Below xl the masthead is sticky and lies over the top of the page: what
+   the address names stops under it, not behind it. */
+@media (max-width: 74.99rem) {
+  :target, .fold[id] { scroll-margin-top: calc(var(--masthead-h, 4.5rem) + var(--pf-t--global--spacer--md)); }
+}
