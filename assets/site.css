@@ -20,19 +20,22 @@
    Copied from mabc-ws, which adapts gahingwoo.com; the rail, the About dialog
    and its credit badge follow gahingwoo.com. */
 
-/* Roxora green in place of PatternFly's blue. Only the palette steps that
-   PatternFly's brand, link and focus tokens point at are replaced; every
-   component reads those tokens, so buttons, links, the current nav item,
-   selected toggles, radios and the step numbers follow. Status colours and
-   the blue of info alerts are PatternFly's own. The ramp is built on the
-   mark's bands (#5FD4A8, #2E7A68, #1F4740); contrast as WCAG 2 computes it:
-     light theme, on white: #2E7A68 5.12:1 (links, primary button with white
-       text), #1F5F50 7.47:1 (hover), #1F4740 10.33:1 (pressed, brand text),
-       #3A957E 3.63:1 (border hover, a UI part needing 3:1);
-       #2E7A68 on the page grey #f2f2f2 4.58:1.
-     dark theme, on #151515 / #1f1f1f / #292929: #5FD4A8 9.97 / 9.00 / 7.95:1
-       (links, primary button with PatternFly's dark text on it), #8FE2C3
-       12.03:1 (hover), #C4F0DF 14.68:1 (pressed). */
+/* Roxora's colours in place of PatternFly's blue and grey. Only palette
+   steps that PatternFly's semantic tokens point at are replaced, so every
+   component follows; status colours (warning, danger, success, info) stay
+   PatternFly's. The colours come from the mark: #5FD4A8, #2E7A68, #1F4740
+   and the near-black #12171A. Contrast as WCAG 2 computes it:
+
+   Light theme
+     page ground #EEF4F1 (mint grey), cards white; borders tinted to match.
+     links and brand UI (radios, selected toggles, nav bar) #2E7A68:
+       5.12:1 on white, 4.60:1 on the page ground; hover #1F5F50 7.47:1.
+     primary buttons and step numbers: bright #5FD4A8 with #12171A text,
+       9.86:1 (hover #7ADDB7 11.05:1, pressed #4FC79A 8.57:1).
+   Dark theme
+     page ground #12171A, cards #1C2527, hover #263133; borders tinted.
+     links, brand UI, primary buttons #5FD4A8: 9.86:1 on the ground,
+       8.54:1 on a card; button text #12171A 9.86:1; hover #8FE2C3. */
 :root {
   --pf-t--global--color--brand--100: #3a957e;
   --pf-t--global--color--brand--200: #2e7a68;
@@ -48,6 +51,13 @@
   --pf-t--global--text--color--link--100: #2e7a68;
   --pf-t--global--text--color--link--200: #1f5f50;
   --pf-t--global--text--color--link--250: #1f4740;
+  --pf-t--global--background--color--200: #eef4f1;
+  --pf-t--global--background--color--300: #dce8e3;
+  --pf-t--global--border--color--50: #d3e0db;
+  --pf-t--global--border--color--100: #bccec7;
+  --pf-t--global--border--color--200: #9db3ab;
+  --pf-t--global--border--color--300: #85a098;
+  --pf-t--global--border--color--400: #4d6660;
 
   --pf-t--global--dark--color--brand--100: #5fd4a8;
   --pf-t--global--dark--color--brand--200: #8fe2c3;
@@ -58,6 +68,33 @@
   --pf-t--global--dark--focus-ring--color--100: #5fd4a8;
   --pf-t--global--dark--text--color--link--100: #5fd4a8;
   --pf-t--global--dark--text--color--link--200: #8fe2c3;
+  --pf-t--global--dark--background--color--100: #12171a;
+  --pf-t--global--dark--background--color--200: #1c2527;
+  --pf-t--global--dark--background--color--300: #263133;
+  --pf-t--global--dark--border--color--50: #2e3b3a;
+  --pf-t--global--dark--border--color--100: #3e504c;
+  --pf-t--global--dark--border--color--200: #8fa39d;
+  --pf-t--global--dark--border--color--300: #b9c8c3;
+
+  /* The bright green, for what should catch the eye first. */
+  --roxora-accent: #5fd4a8;
+  --roxora-accent--hover: #7addb7;
+  --roxora-accent--clicked: #4fc79a;
+  --roxora-on-accent: #12171a;
+}
+:root.pf-v6-theme-dark {
+  --roxora-accent--hover: #8fe2c3;
+  --roxora-accent--clicked: #c4f0df;
+}
+/* Primary buttons take the bright green with near-black text in both
+   themes, at every size. */
+.pf-v6-c-button, .pf-v6-c-button.pf-m-display-lg {
+  --pf-v6-c-button--m-primary--BackgroundColor: var(--roxora-accent);
+  --pf-v6-c-button--m-primary--Color: var(--roxora-on-accent);
+  --pf-v6-c-button--m-primary--hover--BackgroundColor: var(--roxora-accent--hover);
+  --pf-v6-c-button--m-primary--hover--Color: var(--roxora-on-accent);
+  --pf-v6-c-button--m-primary--m-clicked--BackgroundColor: var(--roxora-accent--clicked);
+  --pf-v6-c-button--m-primary--m-clicked--Color: var(--roxora-on-accent);
 }
 
 /* Red Hat Display ships as a variable font covering 300..900, but PatternFly
@@ -873,8 +910,8 @@ html.js .copy-block .pf-v6-c-code-block__pre { padding-inline-end: 5rem; }
   height: 1.75rem;
   margin-inline-end: var(--pf-t--global--spacer--md);
   border-radius: 50%;
-  background: var(--pf-t--global--color--brand--default);
-  color: var(--pf-t--global--text--color--on-brand--default, #fff);
+  background: var(--roxora-accent);
+  color: var(--roxora-on-accent);
   font-family: var(--pf-t--global--font--family--body);
   font-size: var(--pf-t--global--font--size--body--sm);
   font-weight: 500;
@@ -994,12 +1031,24 @@ html:not(.js) .after-chooser > .files-section { order: -1; }
 .landing-part + .landing-part { margin-block-start: var(--pf-t--global--spacer--2xl); }
 .landing-part--hero + .landing-part { margin-block-start: var(--pf-t--global--spacer--lg); }
 
-/* The Hero's brand asset is the large mark of the Facet wallpaper, light
-   or dark with the theme, at the right as the Hero guidelines place it. It
-   is dropped on a phone, where the text needs the whole width. */
+/* The Hero is a band of the mark's greens, deep green into the near-black,
+   in both themes, with the large mark of the Facet wallpaper at the right
+   as the Hero guidelines place it (dropped on a phone, where the text
+   needs the whole width). Inside it the text is light and the links and
+   outlines are the bright green, so the band reads the same in either
+   theme. Contrast on #1F4740, its lightest point: text white 10.33:1,
+   subtle text #C4D3CE 6.67:1, links #5FD4A8 5.64:1. */
 .landing-hero {
-  --pf-v6-c-hero--BackgroundImage--light: url("/assets/brand/hero-facet-light.svg");
-  --pf-v6-c-hero--BackgroundImage--dark: url("/assets/brand/hero-facet-dark.svg");
+  --pf-v6-c-hero--BackgroundColor: #12171a;
+  --pf-v6-c-hero--gradient--stop-1--light: #1f4740;
+  --pf-v6-c-hero--gradient--stop-2--light: #173530;
+  --pf-v6-c-hero--gradient--stop-3--light: #12171a;
+  --pf-v6-c-hero--gradient--stop-1--dark: #1f4740;
+  --pf-v6-c-hero--gradient--stop-2--dark: #173530;
+  --pf-v6-c-hero--gradient--stop-3--dark: #12171a;
+  --pf-v6-c-hero--BackgroundImage--light: url("/assets/brand/hero-facet.svg");
+  --pf-v6-c-hero--BackgroundImage--dark: url("/assets/brand/hero-facet.svg");
+  --pf-v6-c-hero--BorderColor: #1f4740;
   --pf-v6-c-hero--PaddingInlineStart: var(--pf-t--global--spacer--lg);
   --pf-v6-c-hero--PaddingInlineEnd: var(--pf-t--global--spacer--lg);
   --pf-v6-c-hero--PaddingBlockStart: var(--pf-t--global--spacer--xl);
@@ -1007,10 +1056,21 @@ html:not(.js) .after-chooser > .files-section { order: -1; }
   --pf-v6-c-hero--BorderStartEndRadius: var(--pf-t--global--border--radius--large);
   --pf-v6-c-hero--BorderEndStartRadius: var(--pf-t--global--border--radius--large);
   --pf-v6-c-hero__body--MaxWidth: 100%;
-  /* The wallpaper's own ground, so the mark sits on it as on the desktop. */
-  --pf-v6-c-hero--BackgroundColor: #eef3f1;
+  --pf-t--global--text--color--regular: #ffffff;
+  --pf-t--global--text--color--subtle: #c4d3ce;
+  --pf-t--global--text--color--link--default: #5fd4a8;
+  --pf-t--global--text--color--link--hover: #8fe2c3;
+  --pf-t--global--focus-ring--color--default: #5fd4a8;
+  color: var(--pf-t--global--text--color--regular);
 }
-html.pf-v6-theme-dark .landing-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
+.landing-hero .pf-v6-c-button, .landing-hero .pf-v6-c-button.pf-m-display-lg {
+  --pf-v6-c-button--m-secondary--Color: #5fd4a8;
+  --pf-v6-c-button--m-secondary--BorderColor: #5fd4a8;
+  --pf-v6-c-button--m-secondary--hover--Color: #8fe2c3;
+  --pf-v6-c-button--m-secondary--hover--BorderColor: #8fe2c3;
+  --pf-v6-c-button--m-secondary--m-clicked--Color: #c4f0df;
+  --pf-v6-c-button--m-secondary--m-clicked--BorderColor: #c4f0df;
+}
 @media (max-width: 47.99rem) {
   .landing-hero { --pf-v6-c-hero--BackgroundImage--light: none; --pf-v6-c-hero--BackgroundImage--dark: none; }
 }
@@ -1072,9 +1132,9 @@ html.pf-v6-theme-dark .landing-hero { --pf-v6-c-hero--BackgroundColor: #12171a; 
 
 /* ---- Roxora Imager ---- */
 .imager-icon { display: block; width: 4rem; height: 4rem; margin-block-end: var(--pf-t--global--spacer--md); }
-/* The icon is a near-black tile, the colour of the dark Hero itself: a
-   hairline on the tile's own edge keeps its shape there. */
-html.pf-v6-theme-dark .imager-icon { border-radius: 16px; outline: 1px solid var(--pf-t--global--border--color--default); outline-offset: -4px; }
+/* The icon is a near-black tile on the Hero's near-black: a hairline on
+   the tile's own edge keeps its shape there. */
+.imager-icon { border-radius: 16px; outline: 1px solid rgba(255, 255, 255, 0.24); outline-offset: -4px; }
 .imager-sums + .pf-v6-c-code-block { margin-block-start: var(--pf-t--global--spacer--sm); }
 /* Under the actions: what the button downloads, the version, the notes. */
 .landing-hero__meta { margin: var(--pf-t--global--spacer--md) 0 0 0; color: var(--pf-t--global--text--color--subtle); }
