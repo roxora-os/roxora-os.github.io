@@ -20,6 +20,46 @@
    Copied from mabc-ws, which adapts gahingwoo.com; the rail, the About dialog
    and its credit badge follow gahingwoo.com. */
 
+/* Roxora green in place of PatternFly's blue. Only the palette steps that
+   PatternFly's brand, link and focus tokens point at are replaced; every
+   component reads those tokens, so buttons, links, the current nav item,
+   selected toggles, radios and the step numbers follow. Status colours and
+   the blue of info alerts are PatternFly's own. The ramp is built on the
+   mark's bands (#5FD4A8, #2E7A68, #1F4740); contrast as WCAG 2 computes it:
+     light theme, on white: #2E7A68 5.12:1 (links, primary button with white
+       text), #1F5F50 7.47:1 (hover), #1F4740 10.33:1 (pressed, brand text),
+       #3A957E 3.63:1 (border hover, a UI part needing 3:1);
+       #2E7A68 on the page grey #f2f2f2 4.58:1.
+     dark theme, on #151515 / #1f1f1f / #292929: #5FD4A8 9.97 / 9.00 / 7.95:1
+       (links, primary button with PatternFly's dark text on it), #8FE2C3
+       12.03:1 (hover), #C4F0DF 14.68:1 (pressed). */
+:root {
+  --pf-t--global--color--brand--100: #3a957e;
+  --pf-t--global--color--brand--200: #2e7a68;
+  --pf-t--global--color--brand--300: #1f5f50;
+  --pf-t--global--color--brand--400: #1f4740;
+  --pf-t--global--color--brand--500: #163530;
+  --pf-t--global--color--brand--subtle--100: #e3f4ee;
+  --pf-t--global--color--brand--subtle--200: #c2e9da;
+  --pf-t--global--color--brand--subtle--300: #3a957e;
+  --pf-t--global--color--brand--subtle--400: #2e7a68;
+  --pf-t--global--focus-ring--color--100: #2e7a68;
+  --pf-t--global--focus-ring--color--200: #1f5f50;
+  --pf-t--global--text--color--link--100: #2e7a68;
+  --pf-t--global--text--color--link--200: #1f5f50;
+  --pf-t--global--text--color--link--250: #1f4740;
+
+  --pf-t--global--dark--color--brand--100: #5fd4a8;
+  --pf-t--global--dark--color--brand--200: #8fe2c3;
+  --pf-t--global--dark--color--brand--300: #c4f0df;
+  --pf-t--global--dark--color--brand--subtle--100: #1f4740;
+  --pf-t--global--dark--color--brand--subtle--200: #2e7a68;
+  --pf-t--global--dark--color--brand--subtle--300: #5fd4a8;
+  --pf-t--global--dark--focus-ring--color--100: #5fd4a8;
+  --pf-t--global--dark--text--color--link--100: #5fd4a8;
+  --pf-t--global--dark--text--color--link--200: #8fe2c3;
+}
+
 /* Red Hat Display ships as a variable font covering 300..900, but PatternFly
    only declares 600..800. Declare the full range so headings can be light. */
 @font-face {
