@@ -121,6 +121,11 @@ def make(catalogs, boards, site):
                         "matching_type": "exclusive", "architecture": "armv8"})
     entries = []
     for release, img in newest_images(catalogs):
+        # Imager downloads an image from one URL. An image published in
+        # parts (larger than GitHub takes as one release file; so far the
+        # desktop images) has none and is left out.
+        if "url" not in img:
+            continue
         if img["board"] not in tags:
             # A board dropped from boards.conf whose last image is still
             # downloadable: it stays choosable until that image ages out.

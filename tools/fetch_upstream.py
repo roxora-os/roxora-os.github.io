@@ -88,10 +88,28 @@ def check_catalog(cat, where):
             sys.exit("fetch_upstream: %s: release.%s missing" % (where, k))
     for i, img in enumerate(cat.get("images", [])):
         for k in ("board", "board_name", "soc", "release", "ubuntu_version",
-                  "branch", "kernel", "file", "url", "size", "sha256",
+                  "branch", "kernel", "file", "size", "sha256",
                   "extract_size", "extract_sha256", "status"):
             if k not in img:
                 sys.exit("fetch_upstream: %s: images[%d].%s missing" % (where, i, k))
+        # An image larger than GitHub takes as one release file is published
+        # in parts and has "parts" in place of "url" (release contract).
+        parts = img.get("parts")
+        if parts is None:
+            if "url" not in img:
+                sys.exit("fetch_upstream: %s: images[%d] has neither url nor parts" % (where, i))
+        elif "url" in img or not isinstance(parts, list) or len(parts) < 2:
+            sys.exit("fetch_upstream: %s: images[%d].parts must be two or more parts, without url"
+                     % (where, i))
+        else:
+            for n, part in enumerate(parts):
+                for k in ("file", "url", "size", "sha256"):
+                    if not isinstance(part, dict) or k not in part:
+                        sys.exit("fetch_upstream: %s: images[%d].parts[%d].%s missing"
+                                 % (where, i, n, k))
+            if sum(part["size"] for part in parts) != img["size"]:
+                sys.exit("fetch_upstream: %s: images[%d]: the parts do not add up to size"
+                         % (where, i))
         for k in ("file", "url", "size", "sha256"):
             if "spi" in img and k not in img["spi"]:
                 sys.exit("fetch_upstream: %s: images[%d].spi.%s missing" % (where, i, k))
@@ -111,7 +129,8 @@ def trusted(cat, where):
         cat["release"]["url"] = RELEASES.rstrip("/")
     kept = []
     for img in cat.get("images", []):
-        if not ok(img["url"]):
+        if not all(ok(u) for u in ([p["url"] for p in img["parts"]] if "parts" in img
+                                    else [img["url"]])):
             print("note: %s: %s is not downloaded from %s, left out" % (where, img["file"], DOWNLOAD))
             continue
         if "spi" in img and not ok(img["spi"]["url"]):

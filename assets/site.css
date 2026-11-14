@@ -993,6 +993,11 @@ html:not(.js) .board-pick { display: block; }
 .hash-line { font-size: var(--pf-t--global--font--size--body--sm); }
 .result-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md); margin-block: var(--pf-t--global--spacer--lg); }
 .result-size { color: var(--pf-t--global--text--color--subtle); }
+/* An image in parts: the parts to download and the command that joins them. */
+.result-parts { max-width: 789px; margin-block-end: var(--pf-t--global--spacer--lg); }
+.result-parts > p { margin-block: var(--pf-t--global--spacer--sm); }
+.parts-list { margin: 0; padding-inline-start: var(--pf-t--global--spacer--lg); }
+.parts-list li + li { margin-block-start: var(--pf-t--global--spacer--sm); }
 /* A link to the file itself starts a download and leaves no page, so it
    does not carry the glyph of a link that goes elsewhere. */
 a.download-link:not(.pf-v6-c-button)::after, a.download-link .pf-v6-c-button__text::after { content: none !important; }

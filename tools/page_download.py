@@ -117,10 +117,17 @@ def chooser_data(offer):
                 "codename": img["release"], "ubuntuName": ubuntu_short(img),
                 "flavor": fl, "flavorName": os_list.flavor_name(img, sentence=True),
                 "kernel": img["branch"], "kernelVersion": img["kernel"],
-                "file": img["file"], "url": img["url"], "size": size(img["size"]),
+                "file": img["file"], "size": size(img["size"]),
                 "written": size(img["extract_size"]), "sha256": img["sha256"],
                 "anchor": anchor(img),
             }
+            # One file to download, or the parts of an image larger than
+            # GitHub takes as one release file (release contract).
+            if img.get("parts"):
+                entry["parts"] = [{"file": p["file"], "url": p["url"], "size": size(p["size"]),
+                                   "sha256": p["sha256"]} for p in img["parts"]]
+            else:
+                entry["url"] = img["url"]
             if img.get("verify_url"):
                 entry["verify"] = img["verify_url"]
             if img.get("spi"):
@@ -252,6 +259,23 @@ def result_step():
         "info", "This is a beta",
         "<p>It is what comes next and may change. The newest release is the safer choice.</p>",
         'id="dl-beta" hidden')
+    # An image in parts: the button leads to Roxora Imager, and the parts
+    # are listed for joining by hand. download.js fills the list.
+    in_parts = (
+        '<div class="result-parts" id="dl-parts" hidden>\n'
+        '<p>This image is larger than GitHub takes as one file, so the release has it in '
+        '<span id="dl-parts-count"></span> parts. %s newer than 0.1.4 downloads them, joins '
+        'them and checks the result. To do it by hand, download every part into one '
+        'directory:</p>\n'
+        '<ol class="parts-list" id="dl-parts-list"></ol>\n'
+        '<p>Then join them in order. The SHA-256 below is that of the joined file.</p>\n'
+        '%s\n'
+        '<p class="meta">On Windows, in the Command Prompt: <code>copy /b</code> with the parts '
+        'joined by <code>+</code>, then the file name. %s</p>\n'
+        '</div>'
+        % (link("/roxora-imager/", "Roxora Imager"),
+           code_block('cat <span data-file></span>.part* &gt; <span data-file></span>'),
+           link("/docs/install/#desktop-images-come-in-parts", "Installing Roxora has the steps.")))
     body = (
         '<div class="result">\n'
         '<p class="result-name" id="dl-name"></p>\n'
@@ -259,12 +283,14 @@ def result_step():
         '%s\n%s\n%s\n'
         '<div class="result-action">'
         '<a class="pf-v6-c-button pf-m-primary pf-m-display-lg download-link" id="dl-button" href="%s">'
-        '<span class="pf-v6-c-button__text">Download</span></a>'
+        '<span class="pf-v6-c-button__text" id="dl-button-text">Download</span></a>'
         '<span class="result-size" id="dl-size"></span></div>\n'
         '%s\n'
+        '%s\n'
         '</div>'
-        % (is_beta, needs_spi, needs_uefi, BUILD_REPO + "/releases",
-           kv([("File", '<a id="dl-file" class="hash download-link" href="%s"></a>' % (BUILD_REPO + "/releases")),
+        % (is_beta, needs_spi, needs_uefi, BUILD_REPO + "/releases", in_parts,
+           kv([("File", '<a id="dl-file" class="hash download-link" href="%s"></a>'
+                '<span id="dl-file-name" class="hash" hidden></span>' % (BUILD_REPO + "/releases")),
                ("SHA-256", copyable("", "the SHA-256", tid="dl-sha")),
                ("Release", '<span id="dl-release"></span><span class="meta">'
                 '<a id="dl-notes" href="%s">Release notes</a>'
@@ -288,7 +314,8 @@ def write_card(first_file):
         "<ul>"
         "<li>%s downloads the image, checks it, writes it and reads it back. With it you do not "
         "need to download anything here.</li>"
-        "<li>%s can list the Roxora images too, or write the file you downloaded.</li>"
+        "<li>%s can list the Roxora images that are one file to download, or write the file "
+        "you downloaded or joined.</li>"
         "<li>Any other tool that writes <code>.img.xz</code> files works, to an SD card, USB "
         "drive, eMMC or NVMe.</li>"
         "</ul>"
@@ -313,10 +340,25 @@ def files_table(cat):
                       % (link(spi["url"], spi["file"]), esc(size(spi["size"])), esc(spi["sha256"])))
         if img.get("firmware") == "uefi":
             extra += '<span class="meta">Needs UEFI firmware on the board first.</span>'
+        if img.get("parts"):
+            # No file of that name is in the release: the parts are, and
+            # joined in order they make it.
+            name = '<span class="hash">%s</span>' % esc(img["file"])
+            extra = ('<span class="meta">In %d parts, to join in order (%s):</span>%s'
+                     % (len(img["parts"]),
+                        link("/docs/install/#desktop-images-come-in-parts", "how"),
+                        "".join('<span class="meta">Part %d: <a class="download-link" href="%s">%s</a> '
+                                '(%s)</span><span class="meta hash">SHA-256 %s</span>'
+                                % (n, esc(p["url"]), esc(p["file"]), esc(size(p["size"])),
+                                   esc(p["sha256"]))
+                                for n, p in enumerate(img["parts"], 1)))) + extra
+            sha = "SHA-256 of the joined file %s" % img["sha256"]
+        else:
+            name = '<a class="hash download-link" href="%s">%s</a>' % (esc(img["url"]), esc(img["file"]))
+            sha = "SHA-256 %s" % img["sha256"]
         rows.append((anchor(img), [
             '%s<span class="meta">%s</span>' % (esc(img["board_name"]), esc(image_words(img))),
-            '<a class="hash download-link" href="%s">%s</a><span class="meta hash">SHA-256 %s</span>%s'
-            % (esc(img["url"]), esc(img["file"]), esc(img["sha256"]), extra),
+            '%s<span class="meta hash">%s</span>%s' % (name, esc(sha), extra),
             esc(size(img["size"])),
         ]))
     return table("files-table", ["Image", "File", "Size"], rows, stack="lg")

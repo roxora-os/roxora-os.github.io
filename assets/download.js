@@ -168,9 +168,44 @@
     $('dl-uefi').hidden = !img.uefi;
     if (img.uefi) link('dl-uefi-more', '/boards/#' + img.board);
 
-    link('dl-button', img.url);
-    $('dl-size').textContent = img.size + ' to download, ' + img.written + ' on the card';
-    link('dl-file', img.url, img.file);
+    // An image in parts has no file to download in one go: the button
+    // leads to Roxora Imager, which joins the parts, and the parts are
+    // listed for doing it by hand.
+    var parts = img.parts || null;
+    link('dl-button', parts ? '/roxora-imager/' : img.url);
+    $('dl-button').classList.toggle('download-link', !parts);
+    $('dl-button-text').textContent = parts ? 'Download with Roxora Imager' : 'Download';
+    $('dl-size').textContent = img.size + ' to download' +
+      (parts ? ' in ' + parts.length + ' parts' : '') + ', ' + img.written + ' on the card';
+    $('dl-parts').hidden = !parts;
+    $('dl-file').hidden = !!parts;
+    $('dl-file-name').hidden = !parts;
+    $('dl-file-name').textContent = img.file;
+    if (parts) {
+      $('dl-parts-count').textContent = parts.length;
+      var list = $('dl-parts-list');
+      list.textContent = '';
+      parts.forEach(function (p) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.className = 'hash download-link';
+        a.href = p.url;
+        a.textContent = p.file;
+        li.appendChild(a);
+        li.appendChild(document.createTextNode(' (' + p.size + ')'));
+        var sha = document.createElement('span');
+        sha.className = 'meta hash-line';
+        sha.textContent = 'SHA-256 ';
+        var code = document.createElement('code');
+        code.className = 'hash';
+        code.textContent = p.sha256;
+        sha.appendChild(code);
+        li.appendChild(sha);
+        list.appendChild(li);
+      });
+    } else {
+      link('dl-file', img.url, img.file);
+    }
     $('dl-sha').textContent = img.sha256;
     $('dl-release').textContent = 'Roxora ' + rel.version + (rel.beta ? ' beta' : '') + ', ' + rel.date;
     link('dl-notes', rel.url);
