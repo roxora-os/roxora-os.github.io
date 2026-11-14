@@ -19,7 +19,7 @@ Download page with the board already chosen.
 """
 
 import os_list
-from markup import (BUILD_REPO, EDK2_RK3576, UBUNTU, button, card, esc, fold, kv, link,
+from markup import (BUILD_REPO, EDK2_RK3576, UBUNTU, board_filter, button, card, esc, fold, kv, link,
                     table)
 
 # What a board needs before a Roxora image boots on it, and its maker's
@@ -94,16 +94,20 @@ def board_fold(board, rows, downloadable):
                '<span class="board-row__meta">%s, %s</span>'
                '<span class="board-row__images">Ubuntu %s</span>'
                % (esc(b["name"]), esc(b["soc"].upper()), esc(b["vendor"]), esc(versions(rows))))
-    return fold(summary, body, fid=board, search=b["name"], cls="board-row")
+    words = " ".join([b["name"], b["vendor"], b["soc"], board]).lower()
+    return fold(summary, body, fid=board, search=b["name"], cls="board-row",
+                extra='data-vendor="%s" data-filter="%s"' % (esc(b["vendor"]), esc(words)))
 
 
 def render(boards, downloadable):
     """downloadable: the boards the Download page offers images for."""
     grouped = group(boards)
-    out = [card("boards", "Supported boards",
-                '<div class="folds">%s</div>' % "\n".join(
-                    board_fold(board, rows, downloadable) for board, rows in grouped.items()),
-                rail=False)]
+    vendors = {}
+    for rows in grouped.values():
+        vendors[rows[0]["vendor"]] = vendors.get(rows[0]["vendor"], 0) + 1
+    folds = '<div class="folds" data-filter-list>%s</div>' % "\n".join(
+        board_fold(board, rows, downloadable) for board, rows in grouped.items())
+    out = [card("boards", "Supported boards", board_filter(vendors, folds), rail=False)]
     out.append(card("about-status", "What the words mean", kv([
         ("Images", "Command line images have no desktop. GNOME images start Ubuntu's GNOME "
          "desktop: the minimal one is Ubuntu's <code>ubuntu-desktop-minimal</code> (the "

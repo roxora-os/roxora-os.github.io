@@ -115,11 +115,14 @@ def beta_label():
     return label("Beta", "orange")
 
 
-def fold(summary, body, fid=None, opened=False, search=None, cls=""):
+def fold(summary, body, fid=None, opened=False, search=None, cls="", extra=""):
     """A section folded behind its heading. It is the browser's own
     <details>, so it opens without JavaScript. summary is finished HTML.
-    With an id and a search title it gets a search record of its own."""
+    With an id and a search title it gets a search record of its own.
+    extra adds attributes."""
     attrs = ' class="fold%s"' % (" " + cls if cls else "")
+    if extra:
+        attrs += " " + extra
     if fid:
         attrs += ' id="%s"' % fid
         if search:
@@ -210,6 +213,52 @@ def empty_state(title, body):
             '<div class="pf-v6-c-empty-state__header"><div class="pf-v6-c-empty-state__title">'
             '<h3 class="pf-v6-c-empty-state__title-text">%s</h3></div></div>'
             '<div class="pf-v6-c-empty-state__body">%s</div></div></div>' % (esc(title), body))
+
+
+SEARCH_ICON = ('<svg class="pf-v6-svg" fill="currentColor" viewBox="0 0 512 512" aria-hidden="true" '
+               'role="img" width="1em" height="1em"><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 '
+               '44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 '
+               '128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 '
+               '9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 '
+               '128 128 0 70.7-57.2 128-128 128z"/></svg>')
+
+
+def board_filter(vendors, items, placeholder="Search boards, vendors or SoCs"):
+    """Search and a vendor filter over a list of boards, as Roxora Imager's
+    Board step has them: the vendors with their counts beside the list on a
+    wide screen, a select above it on a phone. vendors maps a vendor to its
+    number of boards. items is the list itself: finished HTML holding one
+    element per board with data-vendor and data-filter (the words a search
+    matches), and one element marked data-filter-list that is hidden when
+    nothing matches. assets/board-filter.js does the filtering; without
+    JavaScript the controls are not shown and the whole list is."""
+    total = sum(vendors.values())
+    choices = [("", "All vendors", total)] + [(v, v, n) for v, n in vendors.items()]
+    vendor_list = "".join(
+        '<li class="pf-v6-c-simple-list__item"><button class="pf-v6-c-simple-list__item-link%s" '
+        'type="button" data-vendor="%s"><span>%s</span><span class="vendor-count">%d</span></button></li>'
+        % (" pf-m-current" if not v else "", esc(v), esc(name), n) for v, name, n in choices)
+    vendor_select = "".join('<option value="%s">%s (%d)</option>' % (esc(v), esc(name), n)
+                            for v, name, n in choices)
+    return (
+        '<div class="board-filter" data-board-filter>\n'
+        '<div class="pf-v6-c-text-input-group board-search js-only"><div class="pf-v6-c-text-input-group__main pf-m-icon">'
+        '<span class="pf-v6-c-text-input-group__text"><span class="pf-v6-c-text-input-group__icon">%s</span>'
+        '<input class="pf-v6-c-text-input-group__text-input" type="search" id="board-search" '
+        'placeholder="%s" aria-label="%s" autocomplete="off" spellcheck="false"></span></div></div>\n'
+        '<div class="board-pick">\n'
+        '<span class="pf-v6-c-form-control vendor-select js-only"><select id="vendor-select" aria-label="Vendor">%s</select>'
+        '<span class="pf-v6-c-form-control__utilities"><span class="pf-v6-c-form-control__toggle-icon">%s</span>'
+        '</span></span>\n'
+        '<nav class="pf-v6-c-simple-list vendor-list js-only" aria-label="Vendors" id="vendor-list">'
+        '<ul class="pf-v6-c-simple-list__list" role="list">%s</ul></nav>\n'
+        '<div class="board-table-wrap">\n%s\n'
+        '<div id="board-none" hidden>%s</div>\n'
+        '</div>\n</div>\n</div>'
+        % (SEARCH_ICON, esc(placeholder), esc(placeholder), vendor_select, CARET, vendor_list, items,
+           empty_state("No board matches",
+                       "Roxora has images for the boards listed here. To ask for another "
+                       "board, open an issue on %s." % link(BUILD_REPO + "/issues", "roxora-os/build"))))
 
 
 def table(cls, head, rows, widths=None, stack="md"):

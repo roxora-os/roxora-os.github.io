@@ -37,7 +37,7 @@ files, and the chooser reads them too.
 import json
 
 import os_list
-from markup import (BUILD_REPO, CARET, EDK2_RK3576, UBUNTU, alert, beta_label, card,
+from markup import (BUILD_REPO, CARET, EDK2_RK3576, UBUNTU, alert, beta_label, board_filter, card,
                     code_block, content, copyable, date, empty_state, esc, fold, kv, link, size,
                     table)
 
@@ -48,12 +48,6 @@ FLAVOR_ABOUT = {
     "gnome": "GNOME desktop (ubuntu-desktop)",
 }
 
-SEARCH_ICON = ('<svg class="pf-v6-svg" fill="currentColor" viewBox="0 0 512 512" aria-hidden="true" '
-               'role="img" width="1em" height="1em"><path d="M505 442.7L405.3 343c-4.5-4.5-10.6-7-17-7H372c27.6-35.3 '
-               '44-79.7 44-128C416 93.1 322.9 0 208 0S0 93.1 0 208s93.1 208 208 208c48.3 0 92.7-16.4 '
-               '128-44v16.3c0 6.4 2.5 12.5 7 17l99.7 99.7c9.4 9.4 24.6 9.4 33.9 0l28.3-28.3c9.4-9.4 '
-               '9.4-24.6.1-34zM208 336c-70.7 0-128-57.2-128-128 0-70.7 57.2-128 128-128 70.7 0 128 57.2 '
-               '128 128 0 70.7-57.2 128-128 128z"/></svg>')
 
 
 def offered(catalogs):
@@ -176,7 +170,7 @@ def board_step(offer):
             else " " + beta_label()
         rows.append(
             '<tr class="pf-v6-c-table__tr pf-m-clickable" data-board="%(id)s" data-vendor="%(vendor)s" '
-            'data-search="%(search)s">'
+            'data-filter="%(search)s">'
             '<td class="pf-v6-c-table__td pf-v6-c-table__check">'
             '<label class="pf-v6-c-radio pf-m-standalone"><input class="pf-v6-c-radio__input" type="radio" '
             'name="board" value="%(id)s" aria-label="%(name)s"></label></td>'
@@ -189,42 +183,17 @@ def board_step(offer):
                 search=esc(" ".join([first["board_name"], first["vendor"], first["soc"], board]).lower()),
                 versions=esc(", ".join(versions)), beta=beta))
 
-    vendor_items = [("", "All vendors", len(boards))] + [(v, v, n) for v, n in vendors.items()]
-    vendor_list = "".join(
-        '<li class="pf-v6-c-simple-list__item"><button class="pf-v6-c-simple-list__item-link%s" '
-        'type="button" data-vendor="%s"><span>%s</span><span class="vendor-count">%d</span></button></li>'
-        % (" pf-m-current" if not v else "", esc(v), esc(name), n) for v, name, n in vendor_items)
-    vendor_select = "".join('<option value="%s">%s (%d)</option>' % (esc(v), esc(name), n)
-                            for v, name, n in vendor_items)
-
-    body = (
-        '<p class="step-lead">Choose the board you want to install Roxora on.</p>\n'
-        '<div class="pf-v6-c-text-input-group board-search"><div class="pf-v6-c-text-input-group__main pf-m-icon">'
-        '<span class="pf-v6-c-text-input-group__text"><span class="pf-v6-c-text-input-group__icon">%s</span>'
-        '<input class="pf-v6-c-text-input-group__text-input" type="search" id="board-search" '
-        'placeholder="Search boards, vendors or SoCs" aria-label="Search boards, vendors or SoCs" '
-        'autocomplete="off" spellcheck="false"></span></div></div>\n'
-        '<div class="board-pick">\n'
-        '<span class="pf-v6-c-form-control vendor-select"><select id="vendor-select" aria-label="Vendor">%s</select>'
-        '<span class="pf-v6-c-form-control__utilities"><span class="pf-v6-c-form-control__toggle-icon">%s</span>'
-        '</span></span>\n'
-        '<nav class="pf-v6-c-simple-list vendor-list" aria-label="Vendors" id="vendor-list">'
-        '<ul class="pf-v6-c-simple-list__list" role="list">%s</ul></nav>\n'
-        '<div class="board-table-wrap">\n'
-        '<table class="pf-v6-c-table pf-m-compact board-table" aria-label="Boards" id="board-table">'
+    table = (
+        '<table class="pf-v6-c-table pf-m-compact board-table" aria-label="Boards" id="board-table" '
+        'data-filter-list>'
         '<thead class="pf-v6-c-table__thead"><tr class="pf-v6-c-table__tr">'
         '<td class="pf-v6-c-table__td pf-v6-c-table__check"></td>'
         '<th class="pf-v6-c-table__th" scope="col">Board</th>'
         '<th class="pf-v6-c-table__th board-soc-col" scope="col">SoC</th>'
         '<th class="pf-v6-c-table__th" scope="col">Images</th></tr></thead>\n'
-        '<tbody class="pf-v6-c-table__tbody">\n%s\n</tbody></table>\n'
-        '<div id="board-none" hidden>%s</div>\n'
-        '</div>\n</div>'
-        % (SEARCH_ICON, vendor_select, CARET, vendor_list, "\n".join(rows),
-           empty_state("No board matches",
-                       "Roxora has images for the boards on the %s page. To ask for another "
-                       "board, open an issue on %s." % (
-                           link("/boards/", "Boards"), link(BUILD_REPO + "/issues", "roxora-os/build")))))
+        '<tbody class="pf-v6-c-table__tbody">\n%s\n</tbody></table>' % "\n".join(rows))
+    body = ('<p class="step-lead">Choose the board you want to install Roxora on.</p>\n'
+            + board_filter(vendors, table))
     # Once a board is chosen the step folds to one line, as the step list of
     # the imager does on a narrow screen.
     summary = ('<span class="step-summary" id="board-summary"></span>'

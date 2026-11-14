@@ -53,40 +53,6 @@
 
   // ---- step 1: the board ----
   var rows = Array.prototype.slice.call(document.querySelectorAll('#board-table tbody tr'));
-  var search = $('board-search');
-  var vendorSelect = $('vendor-select');
-  var vendorButtons = Array.prototype.slice.call(document.querySelectorAll('#vendor-list button'));
-  var vendor = '';
-
-  function filterBoards() {
-    var words = search.value.toLowerCase().split(/\s+/).filter(Boolean);
-    var any = false;
-    rows.forEach(function (tr) {
-      var hay = tr.getAttribute('data-search');
-      var ok = (!vendor || tr.getAttribute('data-vendor') === vendor) &&
-        words.every(function (w) { return hay.indexOf(w) >= 0; });
-      tr.hidden = !ok;
-      any = any || ok;
-    });
-    $('board-table').hidden = !any;
-    $('board-none').hidden = any;
-  }
-  function setVendor(v) {
-    vendor = v;
-    vendorSelect.value = v;
-    vendorButtons.forEach(function (b) {
-      var on = b.getAttribute('data-vendor') === v;
-      b.classList.toggle('pf-m-current', on);
-      if (on) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current');
-    });
-    filterBoards();
-  }
-  search.addEventListener('input', filterBoards);
-  vendorSelect.addEventListener('change', function () { setVendor(vendorSelect.value); });
-  vendorButtons.forEach(function (b) {
-    b.addEventListener('click', function () { setVendor(b.getAttribute('data-vendor')); });
-  });
-
   function collapseBoard(on) {
     boardCard.classList.toggle('is-collapsed', on);
   }
@@ -112,7 +78,7 @@
   });
   $('board-change').addEventListener('click', function () {
     collapseBoard(false);
-    search.focus();
+    $('board-search').focus();
   });
 
   // ---- step 2: the image ----
@@ -261,7 +227,6 @@
     return q.get('board');
   }
 
-  filterBoards();
   var first = fromAddress();
   if (first) chooseBoard(first);
 })();

@@ -864,6 +864,10 @@ html.js .copy-block .pf-v6-c-code-block__pre { padding-inline-end: 5rem; }
 .vendor-list .pf-v6-c-simple-list__item-link { display: flex; justify-content: space-between; gap: var(--pf-t--global--spacer--md); cursor: pointer; }
 .vendor-count { color: var(--pf-t--global--text--color--subtle); font-variant-numeric: tabular-nums; }
 .board-table-wrap { min-width: 0; }
+/* Without JavaScript there is nothing to filter with: the list takes the
+   whole width. */
+html:not(.js) .board-pick { display: block; }
+.board-filter .fold[hidden] { display: none; }
 .board-table .pf-m-clickable { cursor: pointer; }
 .board-table .pf-v6-c-table__check { width: 2.5rem; }
 .board-table .board-name { width: 42%; font-weight: 500; }

@@ -65,7 +65,8 @@ from shell import (FOOTER_DOCS, FOOTER_PAGES, SHELL, SITE_PAGES, cards, foot_lin
 
 
 # Scripts only one page needs, after site.js.
-PAGE_SCRIPTS = {"download": ["/assets/download.js"]}
+PAGE_SCRIPTS = {"download": ["/assets/board-filter.js", "/assets/download.js"],
+                "boards": ["/assets/board-filter.js"]}
 
 
 def read_boards():
