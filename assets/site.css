@@ -985,19 +985,19 @@ html:not(.js) .after-chooser > .files-section { order: -1; }
    No sidebar on a wide screen and no page head: a Hero (PatternFly's
    component for home and product landing pages), then one page section per
    part, all in the same 76rem column as the other pages' content. */
-.home-page { --pf-v6-c-page--section--m-limit-width--MaxWidth: 76rem; }
-.home-page .pf-v6-c-page__main-section.pf-m-limit-width > .pf-v6-c-page__main-body { margin-inline: auto; }
+.landing { --pf-v6-c-page--section--m-limit-width--MaxWidth: 76rem; }
+.landing .pf-v6-c-page__main-section.pf-m-limit-width > .pf-v6-c-page__main-body { margin-inline: auto; }
 /* The footer keeps to the same column, so on a wide screen its edges line
    up with the content's rather than with the window's. */
-.home-page > :is(.site-footer, .foot-legal) > .pf-v6-c-page__main-body { box-sizing: border-box; width: 100%; max-width: 76rem; margin-inline: auto; }
-.home-page > .pf-v6-c-page__main-section.home-sheet { --pf-v6-c-page__main-section--PaddingBlockStart: var(--pf-t--global--spacer--xl); --pf-v6-c-page__main-section--PaddingBlockEnd: var(--pf-t--global--spacer--3xl); }
-.home-part + .home-part { margin-block-start: var(--pf-t--global--spacer--2xl); }
-.home-part--hero + .home-part { margin-block-start: var(--pf-t--global--spacer--lg); }
+.landing > :is(.site-footer, .foot-legal) > .pf-v6-c-page__main-body { box-sizing: border-box; width: 100%; max-width: 76rem; margin-inline: auto; }
+.landing > .pf-v6-c-page__main-section.landing-sheet { --pf-v6-c-page__main-section--PaddingBlockStart: var(--pf-t--global--spacer--xl); --pf-v6-c-page__main-section--PaddingBlockEnd: var(--pf-t--global--spacer--3xl); }
+.landing-part + .landing-part { margin-block-start: var(--pf-t--global--spacer--2xl); }
+.landing-part--hero + .landing-part { margin-block-start: var(--pf-t--global--spacer--lg); }
 
 /* The Hero's brand asset is the large mark of the Facet wallpaper, light
    or dark with the theme, at the right as the Hero guidelines place it. It
    is dropped on a phone, where the text needs the whole width. */
-.home-hero {
+.landing-hero {
   --pf-v6-c-hero--BackgroundImage--light: url("/assets/brand/hero-facet-light.svg");
   --pf-v6-c-hero--BackgroundImage--dark: url("/assets/brand/hero-facet-dark.svg");
   --pf-v6-c-hero--PaddingInlineStart: var(--pf-t--global--spacer--lg);
@@ -1010,12 +1010,12 @@ html:not(.js) .after-chooser > .files-section { order: -1; }
   /* The wallpaper's own ground, so the mark sits on it as on the desktop. */
   --pf-v6-c-hero--BackgroundColor: #eef3f1;
 }
-html.pf-v6-theme-dark .home-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
+html.pf-v6-theme-dark .landing-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
 @media (max-width: 47.99rem) {
-  .home-hero { --pf-v6-c-hero--BackgroundImage--light: none; --pf-v6-c-hero--BackgroundImage--dark: none; }
+  .landing-hero { --pf-v6-c-hero--BackgroundImage--light: none; --pf-v6-c-hero--BackgroundImage--dark: none; }
 }
 @media (min-width: 48rem) {
-  .home-hero {
+  .landing-hero {
     --pf-v6-c-hero--PaddingInlineStart: var(--pf-t--global--spacer--3xl);
     --pf-v6-c-hero--PaddingInlineEnd: var(--pf-t--global--spacer--3xl);
     --pf-v6-c-hero--PaddingBlockStart: var(--pf-t--global--spacer--3xl);
@@ -1025,19 +1025,19 @@ html.pf-v6-theme-dark .home-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
     --pf-v6-c-hero__body--MaxWidth: 70%;
   }
 }
-.home-hero__title { margin: 0; font-weight: 400; }
+.landing-hero__title { margin: 0; font-weight: 400; }
 /* Measurements from the Hero guidelines: 16px from the headline to the
    text, 32px to the actions, 16px between the actions. */
-.home-hero__text { margin: var(--pf-t--global--spacer--md) 0 0 0; max-width: 40rem; font-size: var(--pf-t--global--font--size--body--lg); line-height: 1.6; }
-.home-hero__actions { display: flex; flex-wrap: wrap; gap: var(--pf-t--global--spacer--md); margin-block-start: var(--pf-t--global--spacer--xl); }
+.landing-hero__text { margin: var(--pf-t--global--spacer--md) 0 0 0; max-width: 40rem; font-size: var(--pf-t--global--font--size--body--lg); line-height: 1.6; }
+.landing-hero__actions { display: flex; flex-wrap: wrap; gap: var(--pf-t--global--spacer--md); margin-block-start: var(--pf-t--global--spacer--xl); }
 @media (max-width: 35.99rem) {
-  .home-hero__actions .pf-v6-c-button { width: 100%; justify-content: center; }
+  .landing-hero__actions .pf-v6-c-button { width: 100%; justify-content: center; }
 }
 
 /* A section's name, with the link to the page that has the rest at the
    other end of the row. */
-.home-section__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--lg); margin-block-end: var(--pf-t--global--spacer--lg); }
-.home-section__head .pf-v6-c-title { margin: 0; font-weight: 400; }
+.landing-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--lg); margin-block-end: var(--pf-t--global--spacer--lg); }
+.landing-head .pf-v6-c-title { margin: 0; font-weight: 400; }
 
 /* The newest release: terms over values, side by side from md. */
 /* Four short values: two to a row on a phone, all four from a tablet up. */
@@ -1070,22 +1070,30 @@ html.pf-v6-theme-dark .home-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
 .board-note { max-width: 789px; margin: var(--pf-t--global--spacer--md) 0; }
 .board-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--lg); }
 
-/* ---- Roxora Imager: the packages, one block per system ---- */
-.imager-release { margin: 0 0 var(--pf-t--global--spacer--lg) 0; }
-.platforms__mine { margin: 0; font-size: var(--pf-t--global--font--size--body--sm); color: var(--pf-t--global--text--color--subtle); }
-.platforms__all { margin: var(--pf-t--global--spacer--md) 0 0 0; }
-.platforms__all .pf-v6-c-button { min-height: 2.75rem; }
-.platform { padding-block: var(--pf-t--global--spacer--md); border-block-start: 1px solid var(--pf-t--global--border--color--default); }
-.platform:last-of-type { padding-block-end: 0; }
-.platform__name { margin: 0 0 var(--pf-t--global--spacer--sm) 0; font-family: var(--pf-t--global--font--family--heading); font-size: 1.125rem; font-weight: 400; }
-.platform__arch + .platform__arch { margin-block-start: var(--pf-t--global--spacer--md); }
-.platform__arch .meta { margin-top: var(--pf-t--global--spacer--sm); }
-.platform__other { white-space: nowrap; }
-/* With the visitor's system known, only its block is shown, without the
-   rule and the name that tell the blocks apart in the full list. */
-.platforms[data-mine] .platform:not(.is-mine) { display: none; }
-.platforms[data-mine] .platform.is-mine { border-block-start: 0; padding-block: var(--pf-t--global--spacer--xs) 0; }
-.platforms[data-mine] .platform.is-mine .platform__name { font-size: 1.25rem; }
+/* ---- Roxora Imager ---- */
+.imager-icon { display: block; width: 4rem; height: 4rem; margin-block-end: var(--pf-t--global--spacer--md); }
+/* The icon is a near-black tile, the colour of the dark Hero itself: a
+   hairline on the tile's own edge keeps its shape there. */
+html.pf-v6-theme-dark .imager-icon { border-radius: 16px; outline: 1px solid var(--pf-t--global--border--color--default); outline-offset: -4px; }
+.imager-sums + .pf-v6-c-code-block { margin-block-start: var(--pf-t--global--spacer--sm); }
+/* Under the actions: what the button downloads, the version, the notes. */
+.landing-hero__meta { margin: var(--pf-t--global--spacer--md) 0 0 0; color: var(--pf-t--global--text--color--subtle); }
+.landing-hero__meta .pf-v6-c-label { vertical-align: 0.1em; }
+/* The picture across the column, what it does in three cards under it. */
+.imager-about { display: grid; gap: var(--pf-t--global--spacer--lg); }
+.imager-figure { margin: 0; }
+.imager-shot { display: block; width: 100%; height: auto; border: 1px solid var(--pf-t--global--border--color--default); border-radius: var(--pf-t--global--border--radius--medium); }
+.imager-shot--dark, html.pf-v6-theme-dark .imager-shot--light { display: none; }
+html.pf-v6-theme-dark .imager-shot--dark { display: block; }
+.imager-features { display: grid; gap: var(--pf-t--global--spacer--md); }
+@media (min-width: 48rem) { .imager-features { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.imager-feature .pf-v6-c-card__title-text { font-size: 1.125rem; }
+/* Every package: a card per system, a group per processor, a line per file. */
+.imager-files { --pf-v6-c-description-list--RowGap: var(--pf-t--global--spacer--md); }
+.imager-file { display: block; }
+.imager-file .meta-inline, .imager-sums { color: var(--pf-t--global--text--color--subtle); }
+.imager-file .meta-inline { white-space: nowrap; }
+.imager-sums { margin: var(--pf-t--global--spacer--md) 0 0 0; overflow-wrap: anywhere; }
 
 /* Below xl the masthead is sticky and lies over the top of the page: what
    the address names stops under it, not behind it. */

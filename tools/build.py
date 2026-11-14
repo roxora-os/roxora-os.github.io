@@ -64,8 +64,11 @@ from shell import (FOOTER_DOCS, FOOTER_PAGES, SHELL, SITE_PAGES, cards, foot_lin
                    doc_section, page_head, render_nav, render_rail, search_records)
 
 
+# Pages laid out as landing pages (tools/markup.py, landing_sheet).
+LANDING = {"", "roxora-imager"}
 # Scripts only one page needs, after site.js.
-PAGE_SCRIPTS = {"download": ["/assets/board-filter.js", "/assets/download.js"],
+PAGE_SCRIPTS = {"roxora-imager": ["/assets/imager.js"],
+                "download": ["/assets/board-filter.js", "/assets/download.js"],
                 "boards": ["/assets/board-filter.js"]}
 
 
@@ -249,7 +252,7 @@ def build():
         json.dumps(records, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
 
     def render(directory, current, heading, subtitle, description, action, body):
-        home = directory == ""
+        landing = directory in LANDING
         rail = cards(body)
         href = "/" + (directory + "/" if directory else "")
         out = SHELL % dict(
@@ -264,14 +267,15 @@ def build():
                             for src in PAGE_SCRIPTS.get(directory, [])),
             noindex='<meta name="robots" content="noindex">\n' if (sample or directory == "404") else "",
             nav=render_nav(current, have),
-            # The home page is a landing page: its sections are its own and
-            # it has no page head. Its first screen carries Download, so the
-            # masthead does not repeat it.
-            sections=nobreak(body) if home else doc_section(
+            # A landing page's sections are its own and it has no page head.
+            # Its Hero carries the page's one primary action, so the
+            # masthead's Download, which is for the Roxora images, does not
+            # stand beside it.
+            sections=nobreak(body) if landing else doc_section(
                 esc(heading), render_rail(rail), page_head(heading, subtitle, action),
                 nobreak(body)),
-            maincls="home-page" if home else "doc-page" + (" with-rail" if rail else ""),
-            download_btn="" if directory in ("download", "") else (
+            maincls="landing" if landing else "doc-page" + (" with-rail" if rail else ""),
+            download_btn="" if landing or directory == "download" else (
                 '      <a class="pf-v6-c-button pf-m-primary masthead-give" href="/download/">'
                 '<span class="pf-v6-c-button__text">Download</span></a>\n'),
             foot_pages=foot_links([(label, href) for label, href in FOOTER_PAGES if href in have]),

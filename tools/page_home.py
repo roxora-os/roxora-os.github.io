@@ -17,40 +17,18 @@ steps. It writes its own page sections; there is no page head."""
 
 import page_boards
 import page_download
-from markup import beta_label, button, date, esc
-
-# The page's content sheet is its first page section (site.css rounds its
-# foot above the footer), so the parts of the home page are bodies of that
-# one section, as PatternFly lets a section hold several.
-PART = ('<div class="pf-v6-c-page__main-body home-part%s" id="%s" data-search="%s">\n'
-        '%s\n</div>\n')
-
-
-def part(sid, search, inner, cls=""):
-    return PART % (" " + cls if cls else "", sid, esc(search), inner)
-
-
-def section_head(sid, title, more=None):
-    """The section's name, with one link beside it to the page that has the
-    rest, as patternfly.org's own home page sets its sections."""
-    link = ""
-    if more:
-        link = ('<a class="pf-v6-c-button pf-m-link pf-m-inline" href="%s">'
-                '<span class="pf-v6-c-button__text">%s</span></a>' % (esc(more[1]), esc(more[0])))
-    return ('<div class="home-section__head"><h2 class="pf-v6-c-title pf-m-2xl" id="%s-title">%s</h2>%s</div>'
-            % (sid, esc(title), link))
-
+from markup import beta_label, button, date, esc, landing_head, landing_part, landing_sheet
 
 def hero():
     return (
-        '<div class="pf-v6-c-hero home-hero">\n'
+        '<div class="pf-v6-c-hero landing-hero">\n'
         '<div class="pf-v6-c-hero__body">\n'
-        '<h1 class="pf-v6-c-title pf-m-3xl home-hero__title" id="what-title">'
+        '<h1 class="pf-v6-c-title pf-m-3xl landing-hero__title" id="what-title">'
         'Plain Ubuntu for Rockchip boards</h1>\n'
-        '<p class="home-hero__text">Roxora images boot a standard Ubuntu install on Rockchip '
+        '<p class="landing-hero__text">Roxora images boot a standard Ubuntu install on Rockchip '
         'single-board computers. The kernel, bootloader and firmware come from Armbian and '
         'update through apt like everything else.</p>\n'
-        '<div class="home-hero__actions">%s%s</div>\n'
+        '<div class="landing-hero__actions">%s%s</div>\n'
         '</div>\n</div>'
         % (button("/download/", "Download", "primary", large=True),
            button("/roxora-imager/", "Get Roxora Imager", "secondary", large=True)))
@@ -117,13 +95,12 @@ def steps():
 
 
 def render(boards, catalogs, downloadable):
-    return (
-        '<section class="pf-v6-c-page__main-section pf-m-limit-width home-sheet" aria-label="Roxora">\n'
-        + part("what", "What Roxora is", hero(), "home-part--hero")
-        + part("status", "Newest release", release_card(catalogs))
-        + part("boards", "Boards", section_head("boards", "Boards", ("All boards", "/boards/"))
-               + page_boards.home_cards(boards, downloadable))
-        + part("install", "Install", section_head("install", "Install",
-                                                  ("Installing Roxora", "/docs/install/"))
-               + steps())
-        + '</section>')
+    return landing_sheet("Roxora", [
+        landing_part("what", "What Roxora is", hero(), "landing-part--hero"),
+        landing_part("status", "Newest release", release_card(catalogs)),
+        landing_part("boards", "Boards", landing_head("boards", "Boards", ("All boards", "/boards/"))
+                     + page_boards.home_cards(boards, downloadable)),
+        landing_part("install", "Install", landing_head("install", "Install",
+                                                        ("Installing Roxora", "/docs/install/"))
+                     + steps()),
+    ])

@@ -313,3 +313,32 @@ def and_list(items):
     return ", ".join(items[:-1]) + " and " + items[-1]
 
 IMAGER_REPO = "https://github.com/roxora-os/imager"
+
+
+# ---- landing pages: the home page and Roxora Imager ----
+# A landing page has no page head: a Hero comes first, then its parts. The
+# page's content sheet is its first page section (site.css rounds its foot
+# above the footer), so the parts are bodies of that one section, as
+# PatternFly lets a section hold several.
+
+def landing_sheet(label_, parts):
+    return ('<section class="pf-v6-c-page__main-section pf-m-limit-width landing-sheet" '
+            'aria-label="%s">\n%s</section>' % (esc(label_), "".join(parts)))
+
+
+def landing_part(sid, search, inner, cls=""):
+    """One part. With its id and search title it is a search record."""
+    return ('<div class="pf-v6-c-page__main-body landing-part%s" id="%s" data-search="%s">\n'
+            '%s\n</div>\n' % (" " + cls if cls else "", sid, esc(search), inner))
+
+
+def landing_head(sid, title, more=None):
+    """A part's name, with one link beside it to where the rest is, as
+    patternfly.org's own home page sets its sections."""
+    more_link = ""
+    if more:
+        more_link = ('<a class="pf-v6-c-button pf-m-link pf-m-inline" href="%s">'
+                     '<span class="pf-v6-c-button__text">%s</span></a>' % (esc(more[1]), esc(more[0])))
+    return ('<div class="landing-head"><h2 class="pf-v6-c-title pf-m-2xl" id="%s-title">%s</h2>%s</div>'
+            % (sid, esc(title), more_link))
+
