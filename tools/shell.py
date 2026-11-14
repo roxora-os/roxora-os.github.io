@@ -66,35 +66,41 @@ def foot_links(items):
 
 def search_records(slug, href, heading, fragment):
     """One record per card, built from the page itself: a card is findable
-    because it is there, not because someone remembered to index it. Slices
-    run from one card to the next rather than matching a closing tag, which
-    nesting makes unreliable."""
+    because it is there, not because someone remembered to index it. An
+    element that is not a card (a folded section, the home page's sections)
+    gets a record by carrying an id and data-search, its title. Slices run
+    from one record's start to the next rather than matching a closing tag,
+    which nesting makes unreliable."""
     def text_of(chunk):
         chunk = re.sub(r"(?is)<(script|style|svg)[^>]*>.*?</\1>", " ", chunk)
         return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", chunk))).strip()
 
-    starts = [(m.start(), m.group(1), text_of(m.group(2))) for m in re.finditer(
+    starts = [(m.start(), m.group(1), text_of(m.group(2)), True) for m in re.finditer(
         r'<div class="pf-v6-c-card"[^>]*\bid="([^"]+)"[^>]*>\s*'
         r'(?:<div class="pf-v6-c-card__header[^>]*>.*?</div>\s*)?'
         r'<div class="pf-v6-c-card__title"><h2 class="pf-v6-c-card__title-text">(.*?)</h2>',
         fragment, re.S)]
-    # The snippet a result shows is read from "x": the card's prose, without
-    # its heading (the result's title already says it) and without code
+    starts += [(m.start(), m.group(1), html.unescape(m.group(2)), False) for m in re.finditer(
+        r'<[a-z0-9]+\b[^>]*\bid="([^"]+)"[^>]*\bdata-search="([^"]+)"', fragment)]
+    starts.sort()
+    # The snippet a result shows is read from "x": the record's prose, without
+    # a card's heading (the result's title already says it) and without code
     # blocks and checksums, so a snippet never opens in the middle of a hash.
     # Those are still searched, from "k".
-    code = re.compile(r'(?s)<pre\b.*?</pre>|<code class="hash">.*?</code>')
+    code = re.compile(r'(?s)<pre\b.*?</pre>|<(code|span|a) class="[^"]*\bhash\b[^"]*"[^>]*>.*?</\1>')
     out = []
-    for i, (pos, cid, title) in enumerate(starts):
+    for i, (pos, cid, title, is_card) in enumerate(starts):
         end = starts[i + 1][0] if i + 1 < len(starts) else len(fragment)
-        chunk = re.sub(r'(?s)^.*?</h2>', "", fragment[pos:end], count=1)
+        chunk = fragment[pos:end]
+        if is_card:
+            chunk = re.sub(r'(?s)^.*?</h2>', "", chunk, count=1)
         rec = {"t": title, "u": href + "#" + cid, "p": heading,
                "x": text_of(code.sub(" ", chunk))}
-        kept = " ".join(text_of(m) for m in code.findall(chunk))
+        kept = " ".join(text_of(m.group(0)) for m in code.finditer(chunk))
         if kept:
             rec["k"] = kept
         out.append(rec)
     return out
-
 
 
 def render_nav(current, have):
@@ -180,6 +186,9 @@ SHELL = """<!DOCTYPE html>
     if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
       document.documentElement.classList.add('pf-v6-theme-dark');
     }
+    // What needs JavaScript (the download chooser, copy buttons) is hidden
+    // until this says it runs; site.css has the rules.
+    document.documentElement.classList.add('js');
   })();
   // Arriving from another of this site's pages, the sidebar's current-item
   // bar grows in as PatternFly's does when an item is clicked, rather than
@@ -371,7 +380,7 @@ SHELL = """<!DOCTYPE html>
   </a>
 </div>
 <script src="%(site_js)s"></script>
-</body>
+%(page_js)s</body>
 </html>
 """
 

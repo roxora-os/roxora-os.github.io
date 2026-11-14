@@ -735,3 +735,86 @@ code:not(.pf-v6-c-code-block__code) { font-family: var(--pf-t--global--font--fam
 .page-title { min-width: 0; overflow-wrap: anywhere; }
 /* Roxora Imager's packages for one platform, one under the other. */
 .pkg-list { display: flex; flex-direction: column; gap: var(--pf-t--global--spacer--sm); }
+
+/* ---- choose step by step ----
+   The pages below follow Roxora Imager: ask for one thing at a time and
+   show one answer, with the rest folded away. Everything is laid out for a
+   phone first; the wider layouts are added from md. */
+
+/* What needs JavaScript is not shown without it, and the other way round.
+   The script in each page's head sets the class before the first paint. */
+html:not(.js) .js-only { display: none !important; }
+html.js .nojs-only { display: none !important; }
+/* PatternFly's components set their own display, which would show an
+   element that carries the hidden attribute. */
+[hidden] { display: none !important; }
+/* A card that is hidden takes the space around it along. */
+.section:has(> .pf-v6-c-card[hidden]), html:not(.js) .section.js-only { display: none; }
+
+/* On a phone a card's 32px insets cost a sixth of the screen. */
+@media (max-width: 35.99rem) {
+  .pf-v6-c-card {
+    --pf-v6-c-card--first-child--PaddingBlockStart: var(--pf-t--global--spacer--lg);
+    --pf-v6-c-card--child--PaddingInlineStart: var(--pf-t--global--spacer--md);
+    --pf-v6-c-card--child--PaddingInlineEnd: var(--pf-t--global--spacer--md);
+    --pf-v6-c-card--last-child--PaddingBlockEnd: var(--pf-t--global--spacer--lg);
+  }
+  .pf-v6-c-page__main > .pf-v6-c-page__main-section:first-child { --pf-v6-c-page__main-section--PaddingBlockStart: var(--pf-t--global--spacer--lg); }
+  .page-head { margin-bottom: var(--pf-t--global--spacer--lg); }
+}
+
+/* Room between the last card and the end of the sheet. */
+.page-content { padding-block-end: var(--pf-t--global--spacer--lg); }
+
+/* A line of introduction under the page title or at the top of a card. */
+.page-lead { max-width: 789px; margin: 0 0 var(--pf-t--global--spacer--md) 0; }
+
+/* A label sits on the text's line, not on its baseline. */
+.pf-v6-c-label { vertical-align: middle; }
+.meta .pf-v6-c-label + .pf-v6-c-label { margin-inline-start: var(--pf-t--global--spacer--xs); }
+
+/* Folded sections: the browser's own details element, drawn as
+   PatternFly's expandable section, in rows divided by hairlines. */
+.fold { border-block-end: 1px solid var(--pf-t--global--border--color--default); }
+.folds > .fold:first-child { border-block-start: 1px solid var(--pf-t--global--border--color--default); }
+.folds > .fold:last-child { border-block-end: 0; }
+.pf-v6-c-content + .fold { margin-block-start: var(--pf-t--global--spacer--md); border-block-start: 1px solid var(--pf-t--global--border--color--default); border-block-end: 0; }
+.fold__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--md);
+  min-height: 3rem;
+  padding-block: var(--pf-t--global--spacer--sm);
+  cursor: pointer;
+  list-style: none;
+}
+.fold__toggle::-webkit-details-marker { display: none; }
+.fold__toggle:hover .fold__icon { color: var(--pf-t--global--text--color--regular); }
+.fold__icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  color: var(--pf-t--global--icon--color--subtle, var(--pf-t--global--text--color--subtle));
+  rotate: -90deg;
+  transition: rotate var(--pf-t--global--motion--duration--sm, 0.2s) var(--pf-t--global--motion--timing-function--default, ease);
+}
+.fold[open] > .fold__toggle .fold__icon { rotate: 0deg; }
+.fold__text { flex: 1 1 auto; min-width: 0; }
+.fold__meta { display: block; color: var(--pf-t--global--text--color--subtle); }
+@media (min-width: 36rem) { .fold__meta { display: inline; margin-inline-start: var(--pf-t--global--spacer--md); } }
+.fold__body { padding-block: var(--pf-t--global--spacer--xs) var(--pf-t--global--spacer--lg); }
+.fold:last-child > .fold__body { padding-block-end: 0; }
+.folds + .pf-v6-c-content { margin-block-start: var(--pf-t--global--spacer--lg); }
+@media (min-width: 48rem) {
+  /* The body lines up with the heading's text, past the caret. */
+  .fold__body { padding-inline-start: calc(1em + var(--pf-t--global--spacer--md)); }
+}
+
+/* A code block with a Copy button in its corner. */
+.copy-block { position: relative; }
+.copy-block > .pf-v6-c-button { position: absolute; inset-block-start: var(--pf-t--global--spacer--sm); inset-inline-end: var(--pf-t--global--spacer--sm); }
+html.js .copy-block .pf-v6-c-code-block__pre { padding-inline-end: 5rem; }
+.copied-note { margin-inline-start: var(--pf-t--global--spacer--sm); font-size: var(--pf-t--global--font--size--body--sm); color: var(--pf-t--global--text--color--subtle); }
+.copy-block .copied-note { position: absolute; inset-block-start: calc(var(--pf-t--global--spacer--sm) + 2.25rem); inset-inline-end: var(--pf-t--global--spacer--sm); }
+/* A checksum with its copy button: the 64 characters wrap. */
+.pf-v6-c-clipboard-copy.pf-m-inline { white-space: normal; padding-inline: 0; background: none; }
+.pf-v6-c-clipboard-copy.pf-m-inline .pf-v6-c-clipboard-copy__text { overflow-wrap: anywhere; word-break: break-all; font-size: 0.875em; }

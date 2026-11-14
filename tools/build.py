@@ -543,6 +543,7 @@ def build():
             tagline=esc(TAGLINE),
             pf_css="/assets/patternfly/patternfly-site.css", site_css="/assets/site.css",
             site_js="/assets/site.js", aboutrows=aboutrows,
+            page_js="",
             heading=esc(heading),
             noindex='<meta name="robots" content="noindex">\n' if (sample or directory == "404") else "",
             head=page_head(heading, subtitle, action),

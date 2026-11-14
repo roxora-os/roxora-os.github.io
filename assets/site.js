@@ -52,6 +52,8 @@
     document.querySelectorAll('.pf-v6-c-page__main a[href^="http"]'),
     function (a) {
       if (a.href.indexOf('https://roxora-os.github.io') === 0) return;
+      // A file to download opens no page.
+      if (a.classList.contains('download-link')) return;
       a.target = '_blank';
       a.rel = a.rel ? a.rel + ' noopener' : 'noopener';
     }
@@ -475,4 +477,54 @@
       scroller().scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
     });
   }
+  // A folded section (a board on the Boards page, an install method) that
+  // the address names is opened, as is one holding the element it names.
+  function openNamed() {
+    var id = decodeURIComponent(location.hash.slice(1));
+    var target = id && document.getElementById(id);
+    for (var el = target; el; el = el.parentElement) {
+      if (el.tagName === 'DETAILS') el.open = true;
+    }
+    if (target && target.tagName === 'DETAILS') target.scrollIntoView();
+  }
+  openNamed();
+  window.addEventListener('hashchange', openNamed);
+
+  // Copy buttons: beside a checksum (PatternFly's clipboard copy) or on a
+  // code block. They are hidden without JavaScript; the text can still be
+  // selected.
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement('textarea');
+      area.value = text;
+      area.setAttribute('readonly', '');
+      area.style.position = 'fixed';
+      area.style.opacity = '0';
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(area);
+      if (ok) resolve(); else reject();
+    });
+  }
+  document.addEventListener('click', function (e) {
+    var button = e.target.closest && e.target.closest('[data-copy]');
+    if (!button) return;
+    var holder = button.closest('.pf-v6-c-clipboard-copy, .copy-block');
+    var from = holder && holder.querySelector('.pf-v6-c-clipboard-copy__text, pre');
+    if (!from) return;
+    copyText(from.textContent.trim()).then(function () {
+      var note = holder.querySelector('.copied-note');
+      if (!note) {
+        note = document.createElement('span');
+        note.className = 'copied-note';
+        note.setAttribute('role', 'status');
+        button.parentNode.appendChild(note);
+      }
+      note.textContent = 'Copied';
+      window.setTimeout(function () { note.textContent = ''; }, 1600);
+    }, function () {});
+  });
 })();
