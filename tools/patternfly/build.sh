@@ -32,8 +32,10 @@ COMPONENTS="Page/page Masthead/masthead Button/button Card/card Backdrop/backdro
             SkipToContent/skip-to-content JumpLinks/jump-links \
             Brand/brand Content/content Title/title EmptyState/empty-state CodeBlock/code-block \
             InputGroup/input-group TextInputGroup/text-input-group Menu/menu \
-            AboutModalBox/about-modal-box"
-LAYOUTS="Grid/grid Bullseye/bullseye"
+            AboutModalBox/about-modal-box Label/label ToggleGroup/toggle-group \
+            Alert/alert Radio/radio FormControl/form-control SimpleList/simple-list \
+            ClipboardCopy/clipboard-copy"
+LAYOUTS="Grid/grid Bullseye/bullseye Gallery/gallery"
 
 OUT=assets/patternfly
 WORK=$(mktemp -d)
