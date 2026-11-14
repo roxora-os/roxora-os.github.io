@@ -24,7 +24,8 @@ being edited.
 
 The code is split by what it renders: markup.py has the pieces of markup
 and the constants, shell.py the shell and the search records, docs.py the
-documents, and this file the generated pages and the build itself.
+documents, page_home.py, page_download.py, page_boards.py and page_imager.py
+a page each, and this file the build itself.
 
     python3 tools/fetch_upstream.py
     python3 tools/build.py
@@ -51,16 +52,21 @@ from datetime import datetime, timezone
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import boards as boards_conf  # noqa: E402
 import os_list  # noqa: E402
+import page_boards  # noqa: E402
+import page_download  # noqa: E402
+import page_home  # noqa: E402
+import page_imager  # noqa: E402
 from docs import DOC_SUMMARY, doc_title, link_list, render_doc, render_docs_index  # noqa: E402
-from markup import (AUTHOR, AUTHOR_CODE, BUILD_REPO, CONTENT, EDK2_RK3576, EMAIL,  # noqa: E402
-                    IMAGER_REPO, NAME, OS_LIST_URL, ROOT, SITE, SOURCE, TAGLINE, UBUNTU,
-                    UPSTREAM, and_list, board_status, card, code_block, content, empty_state,
-                    esc, kv, link, nobreak, size, table, ubuntu)
+from markup import (AUTHOR, AUTHOR_CODE, BUILD_REPO, CONTENT, EMAIL, IMAGER_REPO,  # noqa: E402
+                    NAME, OS_LIST_URL, ROOT, SITE, SOURCE, TAGLINE, UPSTREAM, and_list, esc,
+                    link, nobreak)
 from shell import (FOOTER_DOCS, FOOTER_PAGES, SHELL, SITE_PAGES, cards, foot_links,  # noqa: E402
                    page_head, render_nav, render_rail, search_records)
 
 
-# ---- upstream data ----
+# Scripts only one page needs, after site.js.
+PAGE_SCRIPTS = {"download": ["/assets/download.js"]}
+
 
 def read_boards():
     path = UPSTREAM / "boards.conf"
@@ -70,91 +76,6 @@ def read_boards():
 def read_imager():
     f = UPSTREAM / "imager.json"
     return json.loads(f.read_text(encoding="utf-8")) if f.is_file() else None
-
-
-# Roxora Imager's packages by platform: (platform, [(label, file name
-# pattern)]). A file the release does not have is left out, and a platform
-# with none of its files is too.
-IMAGER_PACKAGES = [
-    ("Windows (x64)", [("Installer", r"-windows-x64-setup\.exe$"), ("Zip", r"-windows-x64\.zip$")]),
-    ("macOS (Apple silicon)", [("Disk image", r"-macos-arm64\.dmg$")]),
-    ("macOS (Intel)", [("Disk image", r"-macos-x86_64\.dmg$")]),
-    ("Linux (x86_64)", [("AppImage", r"-linux-x86_64\.AppImage$"), (".deb", r"_amd64\.deb$"),
-                        (".rpm", r"\.x86_64\.rpm$")]),
-    ("Linux (arm64)", [("AppImage", r"-linux-arm64\.AppImage$"), (".deb", r"_arm64\.deb$"),
-                       (".rpm", r"\.aarch64\.rpm$")]),
-]
-
-
-def render_imager(rel):
-    """The Roxora Imager page: the packages of its newest release, read from
-    GitHub when the site is built, and what each system asks on first start."""
-    if not rel or not rel["assets"]:
-        return card("release", "Downloads", empty_state(
-            "No release yet",
-            "Roxora Imager has not published any packages. When it does they are "
-            "listed here and on %s." % link(IMAGER_REPO + "/releases", "its releases page")))
-    assets = rel["assets"]
-    rows = []
-    for platform, kinds in IMAGER_PACKAGES:
-        found = []
-        for label, pattern in kinds:
-            a = next((a for a in assets if re.search(pattern, a["name"])), None)
-            if a:
-                found.append('%s<span class="meta">%s, %s</span>' % (
-                    link(a["url"], a["name"]), esc(label), esc(size(a["size"]))))
-        if found:
-            rows.append((platform, '<div class="pkg-list">%s</div>' % "".join(
-                '<div>%s</div>' % f for f in found)))
-    sums = next((a for a in assets if a["name"] == "SHA256SUMS"), None)
-    # What has been tried on real hardware; keep this in step with the
-    # hardware test reports (docs/hardware-test.md in roxora-os/build).
-    state = ("Pre-release. Writing an SD card has been tested on macOS with 0.1.3: the "
-             "card was written and read back correctly. Windows, Linux and writing a "
-             "board over USB (Maskrom) have not been tested on hardware yet."
-             if rel["prerelease"] else "Release.")
-    info = [("Released", esc(rel["date"])),
-            ("Status", esc(state)),
-            ("Release notes", link(rel["url"], "Release notes"))]
-    if sums:
-        info.append(("Checksums", '%s<span class="meta">SHA-256 of every file in the '
-                     'release. With the package in the same directory: '
-                     '<code>sha256sum -c --ignore-missing SHA256SUMS</code></span>'
-                     % link(sums["url"], "SHA256SUMS")))
-    info.append(("Code signing", "The Windows and macOS packages are not signed with a "
-                 "publisher's certificate yet. See the %s." % link(
-                     "/code-signing/", "code signing policy")))
-    out = [card("release", "Roxora Imager %s" % rel["tag"].lstrip("v"), kv(info), rail="Release"),
-           card("install", "Install", kv([
-               ("macOS and Linux", "The install script picks the package for the system, "
-                "checks it against the SHA-256 GitHub publishes for it and installs it:%s"
-                % code_block("curl -fsSL https://raw.githubusercontent.com/roxora-os/imager/main/install.sh | sh")),
-               ("Homebrew (macOS)", code_block(
-                   "brew trust gahingwoo/tap\nbrew install --cask gahingwoo/tap/roxora-imager")
-                + '<span class="meta">Update with <code>brew upgrade --cask roxora-imager</code>; '
-                'the app does not update itself.</span>'),
-               ("By hand", "One of the packages below."),
-           ]), rail="Install"),
-           card("downloads", "Downloads", kv(rows))]
-    out.append(card("first-start", "First start", kv([
-        ("Windows", "Windows SmartScreen says <q>Windows protected your PC</q>, because the "
-         "installer is not signed. Choose <strong>More info</strong>, then "
-         "<strong>Run anyway</strong>."),
-        ("macOS", "The app is not notarized, so macOS says it cannot be opened. On macOS 15 "
-         "and later, open it once and choose <strong>Done</strong>, then in System Settings, "
-         "Privacy &amp; Security, choose <strong>Open Anyway</strong>. On macOS 14 and "
-         "earlier, right-click the app in Applications and choose <strong>Open</strong>."),
-        ("Linux", "Install the .deb or .rpm with the package manager, or make the AppImage "
-         "executable and run it. Writing an SD card asks for your password."),
-        ("More", "Drivers for writing a board over USB (Maskrom mode) and the udev rule "
-         "for the AppImage are in %s." % link(IMAGER_REPO + "/blob/main/docs/install.md",
-                                              "Installing Roxora Imager")),
-    ])))
-    out.append(card("web", "In the browser", content(
-        "<p>The same app runs in Chrome or Edge at %s. A browser cannot open a disk, so it "
-        "writes a board's eMMC or SPI flash over USB only, not an SD card in the "
-        "computer.</p>" % link(SITE + "/imager/", "roxora-os.github.io/imager"))))
-    return "\n".join(out)
 
 
 def read_releases():
@@ -170,212 +91,6 @@ def read_synced():
     when = datetime.strptime(json.loads(f.read_text(encoding="utf-8"))["synced"], "%Y-%m-%d %H:%M")
     return "Synced from GitHub %d %s, %s UTC" % (when.day, when.strftime("%B %Y"),
                                                   when.strftime("%H:%M"))
-
-
-# ---- generated pages ----
-
-def render_status(boards, catalogs):
-    releases = and_list(ubuntu(r) for r in dict.fromkeys(b["release"] for b in boards))
-    if not catalogs:
-        status = "Early. No images have been released yet; the first ones are being built."
-    else:
-        newest = catalogs[0]
-        tested = [i for i in newest["images"] if i["status"] == "hardware-tested"]
-        if not tested:
-            status = ("Early. Every image is built and checked in CI; none has been "
-                      "tested on hardware yet.")
-        elif len(tested) < len(newest["images"]):
-            status = ("Early. Every image is built and checked in CI, and some have also "
-                      "been tested on hardware. The Download page says which.")
-        else:
-            status = "Every image in the newest release has been tested on hardware."
-    rows = [("Stage", esc(status)),
-            ("Boards", esc(and_list(dict.fromkeys(b["name"] for b in boards)))),
-            ("Ubuntu", esc(releases))]
-    if catalogs:
-        rel = catalogs[0]["release"]
-        rows.append(("Newest release", '%s<span class="meta">%s%s</span>' % (
-            link("/download/", rel["version"]), esc(rel["date"]),
-            ", pre-release" if rel["prerelease"] else "")))
-    return kv(rows)
-
-
-# What the Download page says about an image's flavor.
-FLAVOR_ABOUT = {
-    "cli": "Command line, no desktop",
-    "gnome-minimal": "Minimal GNOME desktop (ubuntu-desktop-minimal)",
-    "gnome": "GNOME desktop (ubuntu-desktop)",
-}
-
-
-def render_download(catalogs):
-    if not catalogs:
-        return card("releases", "Releases", empty_state(
-            "No releases yet",
-            "Roxora has not published any images. The first ones are being built "
-            "for the boards on the %s page. When a release is published it is listed "
-            "here and on %s." % (link("/boards/", "Boards"),
-                                 link(BUILD_REPO + "/releases", "the releases page"))))
-
-    newest = catalogs[0]
-    rel = newest["release"]
-    # A release: every image passed the checks in CI (and the QEMU boot for
-    # UEFI images). A beta is a GitHub pre-release. Hardware testing is
-    # shown per image.
-    tested = sum(1 for i in newest["images"] if i["status"] == "hardware-tested")
-    state = ("Beta. Try it if you want what comes next; the newest release is the safer choice. "
-             if rel["prerelease"] else "Release. ")
-    state += ("Every image passed the automatic checks in CI. %s"
-              % ("All of them have also been tested on hardware." if tested == len(newest["images"])
-                 else "Images marked Tested on hardware have also been booted on the board; "
-                      "the others have not yet."))
-    out = [card("release", "Roxora %s" % rel["version"], kv([
-        ("Released", esc(rel["date"])),
-        ("Status", esc(state)),
-        ("Release notes", link(rel["url"], "Release notes")),
-        ("Catalog", '%s<span class="meta">The files of this release with their sizes and '
-         'checksums, in the format of the %s.</span>' % (
-             link("/catalog/%s.json" % rel["tag"], "roxora-catalog.json"),
-             link("/docs/release-contract/", "release contract"))),
-    ] + ([("How to install", link("/docs/install/", "Installing Roxora"))]
-         if (UPSTREAM / "docs" / "install.md").is_file() else [])), rail="Release")]
-
-    for img in sorted(newest["images"], key=lambda i: (
-            [x["board"] for x in newest["images"]].index(i["board"]),
-            os_list.ubuntu_order(i.get("ubuntu_version"), i["branch"]),
-            os_list.flavor_order(i))):
-        rows = [
-            ("File", '<a href="%s">%s</a>' % (esc(img["url"]), esc(img["file"]))),
-            ("Size", '%s<span class="meta">%s bytes compressed, %s written to the card</span>'
-             % (esc(size(img["size"])), "{:,}".format(img["size"]), esc(size(img["extract_size"])))),
-            ("SHA-256", '<code class="hash">%s</code>' % esc(img["sha256"])),
-            ("Ubuntu", esc(ubuntu(img["release"]))),
-            ("Image", esc(FLAVOR_ABOUT.get(os_list.flavor(img), os_list.flavor_name(img)))),
-            ("Kernel", esc("%s, Armbian %s branch" % (img["kernel"], img["branch"]))),
-            ("Status", esc(board_status(img["status"]))),
-        ]
-        if img.get("verify_url"):
-            rows.append(("Image checks", link(img["verify_url"], "Verify output")))
-        spi = img.get("spi")
-        if spi:
-            # The ROCK 4D's boot ROM does not boot from a card, so its release
-            # carries a U-Boot image for the SPI flash beside the disk image.
-            rows.append(("SPI bootloader",
-                         '%s<span class="meta">%s, SHA-256 <code class="hash">%s</code></span>'
-                         '<span class="meta">It goes into the board\'s SPI flash, not onto '
-                         'the card. See %s.</span>'
-                         % (link(spi["url"], spi["file"]), esc(size(spi["size"])),
-                            esc(spi["sha256"]),
-                            link("/boards/#booting", "Booting"))))
-        if img.get("firmware") == "uefi":
-            # No U-Boot inside: the board's own UEFI firmware starts GRUB.
-            # Right under File: it decides whether the image is of any use.
-            rows.insert(1, ("Firmware", "This image has no bootloader of its own. The board "
-                         "needs UEFI firmware, such as %s, in its SPI flash first. See %s."
-                         % (link(EDK2_RK3576, "edk2-rk3576"),
-                            link("/boards/#booting", "Booting"))))
-        # A command line image keeps the anchor it had before the desktop
-        # images existed. The flavor is in the title when the board has
-        # desktop images in this release.
-        fl = os_list.flavor(img)
-        cid = "image-%s-%s-%s%s" % (img["board"], img["release"], img["branch"],
-                                    "" if fl == "cli" else "-" + fl)
-        title = img["board_name"]
-        same_board = [i for i in newest["images"] if i["board"] == img["board"]]
-        if len(same_board) > 1:
-            title += " (Ubuntu %s, %s%s)" % (
-                img.get("ubuntu_version") or img["release"], img["branch"],
-                ", " + os_list.flavor_name(img, sentence=True)
-                if any(os_list.flavor(i) != "cli" for i in same_board) else "")
-        out.append(card(cid, title, kv(rows), rail=title))
-
-    out.append(card("check", "Checking and writing an image", content(
-        "<p>Each image has a <code>.sha256</code> file beside it on the release page. "
-        "With both in the same directory:</p>" + code_block(
-            "sha256sum -c %s.sha256" % esc(newest["images"][0]["file"])) +
-        "<p>Write the <code>.img.xz</code> file to an SD card, USB drive, eMMC or NVMe as it "
-        "is. %s and %s can do this, and so can any tool that writes compressed raw images. "
-        "A board image has its bootloader inside, though some boards need one in their SPI "
-        "flash before they boot from an SD card; a UEFI image needs UEFI firmware on the "
-        "board. See %s.</p>"
-        "<p>The first login, on the console, over SSH or on the login screen of a desktop "
-        "image, is user <code>roxora</code> with "
-        "the password <code>roxora</code>, and you are asked to choose a new password "
-        "straight away.</p>"
-        % (link("/roxora-imager/", "Roxora Imager"), link("/rpi-imager/", "Raspberry Pi Imager"),
-           link("/boards/#booting", "Booting")))))
-
-    older = catalogs[1:]
-    if older:
-        out.append(card("earlier", "Earlier releases", kv([
-            (c["release"]["version"], '%s<span class="meta">%s%s</span>' % (
-                link(c["release"]["url"], "Release notes"), esc(c["release"]["date"]),
-                ", pre-release" if c["release"]["prerelease"] else ""))
-            for c in older])))
-    return "\n".join(out)
-
-
-def render_boards(boards):
-    # One table per board maker, in the order boards.conf first names them.
-    short = {"hardware-tested": "Tested on hardware", "ci-only": "CI only"}
-    groups = []
-    for vendor in dict.fromkeys(b["vendor"] for b in boards):
-        # One row per board, kernel branch and Ubuntu release; its images
-        # (boards.conf has a line per flavor) share the last cell, grouped
-        # by status.
-        images = {}
-        for b in boards:
-            if b["vendor"] == vendor:
-                images.setdefault((b["board"], b["branch"], b["release"]), []).append(b)
-        rows = []
-        for group in sorted(images.values(), key=lambda g: (
-                [x["board"] for x in boards].index(g[0]["board"]),
-                os_list.ubuntu_order(UBUNTU.get(g[0]["release"], ("", False))[0], g[0]["branch"]))):
-            b = group[0]
-            group.sort(key=os_list.flavor_order)
-            cell = "".join(
-                '%s<span class="meta">%s</span>' % (
-                    esc(", ".join(os_list.flavor_name(i) for i in group if i["status"] == status)),
-                    esc(short.get(status, status)))
-                for status in dict.fromkeys(i["status"] for i in group))
-            rows.append([esc(b["name"]), esc(b["soc"].upper()), esc(b["branch"]),
-                         esc(ubuntu(b["release"])), cell])
-        groups.append('<div class="pf-v6-c-content%s"><h3>%s</h3></div>\n%s' % (
-            " pf-v6-u-mt-lg" if groups else "", esc(vendor),
-            table("boards-table doc-table", ["Board", "SoC", "Kernel", "Ubuntu", "Images"], rows,
-                  [None, 15, 15, 20, 25])))
-    body = "\n".join(groups)
-    out = [card("boards", "Supported boards", body, rail="Supported boards")]
-    out.append(card("booting", "Booting", kv([
-        ("Radxa ROCK 4D", "The board's boot ROM never boots from an SD card: it looks at "
-         "SPI flash, UFS and USB, in that order. U-Boot has to be in the SPI flash first; "
-         "it then boots a Roxora SD card. %s" % link(
-             "https://docs.radxa.com/en/rock4/rock4d", "Radxa ROCK 4D documentation")),
-        ("ArmSoM CM5-IO", "Boots from eMMC first, then from the SD card. %s" % link(
-            "https://docs.armsom.org/armsom-cm5-io", "ArmSoM CM5-IO documentation")),
-        ("RK3576 boards with UEFI firmware", "One image for any RK3576 board whose SPI "
-         "flash holds UEFI firmware, such as %s. The image has no U-Boot: the firmware "
-         "starts GRUB from the image's EFI system partition and hands the kernel the "
-         "board's device tree. Write the firmware first, following its own instructions, "
-         "then the image to an SD card, USB drive, eMMC or NVMe. It has booted in QEMU, "
-         "not yet on a board." % link(EDK2_RK3576, "edk2-rk3576")),
-    ])))
-    out.append(card("about-status", "What the status means", kv([
-        ("Tested on hardware", "A maintainer has booted the image on the board and "
-         "run the hardware test."),
-        ("CI only", "The image builds and passes the automatic image checks in CI. "
-         "Nobody has booted it on the board yet."),
-        ("Images", "Command line images have no desktop. GNOME images start Ubuntu's GNOME "
-         "desktop: the minimal one is Ubuntu's <code>ubuntu-desktop-minimal</code> (the "
-         "desktop, Firefox and the basic tools), the other the full "
-         "<code>ubuntu-desktop</code> with the office and media applications."),
-        ("Kernel", "Armbian's kernel branch. %s follows recent mainline kernels; "
-         "%s is Rockchip's own kernel (Linux 6.1), offered for the UEFI image."
-         % ("<code>edge</code>", "<code>vendor</code>")),
-        ("Source", "This list is %s in the build repository." % link(
-            BUILD_REPO + "/blob/main/boards.conf", "boards.conf")),
-    ])))
-    return "\n".join(out)
 
 
 def build():
@@ -410,7 +125,6 @@ def build():
     titles = {slug: title for slug, title, _ in docs}
 
     generated = {
-        "{{status}}": render_status(boards, catalogs),
         "{{os-list-url}}": esc(OS_LIST_URL),
         "{{board-names}}": esc(and_list(dict.fromkeys(b["name"] for b in boards))),
     }
@@ -427,29 +141,30 @@ def build():
             sys.exit("content/%s.html: unknown %s" % (slug, ", ".join(left)))
         return text
 
-    pages.append(("", "/", NAME, "Plain Ubuntu for Rockchip boards", TAGLINE,
-                  None, fragment("index")))
     def with_synced(subtitle):
         return (subtitle, synced) if synced else subtitle
 
+    # The boards the Download page has images for: the other pages link a
+    # board to its download only when there is one.
+    downloadable = {i["board"] for c in page_download.offered(catalogs) for i in c["images"]}
+    pages.append(("", "/", NAME, "Plain Ubuntu for Rockchip boards", TAGLINE,
+                  None, page_home.render(boards, catalogs, downloadable)))
+    download_body, _ = page_download.render(catalogs)
     pages.append(("download", "/download/", "Download",
-                  with_synced("Roxora %s" % catalogs[0]["release"]["version"]
-                              if catalogs else "No releases yet"),
+                  with_synced(page_download.subtitle(catalogs)),
                   "Download Roxora images, with their sizes, checksums and test status.",
-                  ("All releases", BUILD_REPO + "/releases"),
-                  render_download(catalogs)))
+                  ("All releases", BUILD_REPO + "/releases"), download_body))
     imager = read_imager()
     pages.append(("roxora-imager", "/roxora-imager/", "Roxora Imager",
-                  with_synced("Version %s, pre-release" % imager["tag"].lstrip("v")
-                              if imager and imager["prerelease"] else
-                              "Version %s" % imager["tag"].lstrip("v") if imager else
-                              "No release yet"),
+                  with_synced(page_imager.subtitle(imager)),
                   "Download Roxora Imager, the app that downloads, checks and writes "
                   "Roxora images.", ("All releases", IMAGER_REPO + "/releases"),
-                  render_imager(imager)))
-    pages.append(("boards", "/boards/", "Boards", with_synced("%d boards, %d images" % (len(dict.fromkeys(b["board"] for b in boards)), len(boards))),
+                  page_imager.render(imager)))
+    pages.append(("boards", "/boards/", "Boards",
+                  with_synced("%d boards, %d images" % (
+                      len(dict.fromkeys(b["board"] for b in boards)), len(boards))),
                   "The boards Roxora builds images for, with kernel branch, Ubuntu "
-                  "release and test status.", None, render_boards(boards)))
+                  "release and test status.", None, page_boards.render(boards, downloadable)))
     pages.append(("rpi-imager", "/rpi-imager/", "Raspberry Pi Imager", "Writing Roxora with Imager",
                   "How to point Raspberry Pi Imager at the Roxora repository file to write "
                   "Roxora images.", None, fragment("rpi-imager")))
@@ -543,7 +258,8 @@ def build():
             tagline=esc(TAGLINE),
             pf_css="/assets/patternfly/patternfly-site.css", site_css="/assets/site.css",
             site_js="/assets/site.js", aboutrows=aboutrows,
-            page_js="",
+            page_js="".join('<script src="%s"></script>\n' % src
+                            for src in PAGE_SCRIPTS.get(directory, [])),
             heading=esc(heading),
             noindex='<meta name="robots" content="noindex">\n' if (sample or directory == "404") else "",
             head=page_head(heading, subtitle, action),

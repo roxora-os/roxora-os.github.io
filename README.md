@@ -10,6 +10,24 @@ its releases, `boards.conf` and `docs/*.md`. The other pages are fragments in
 every push to `main`, every hour, and on a `repository_dispatch` of type
 `build-updated` sent by the build repository.
 
+## Pages
+
+Download is a chooser, after Roxora Imager's steps: the board, then the Ubuntu
+version, the desktop and the kernel, then the one file. A link can name the
+choice:
+
+    /download/?board=radxa-rock-4d&ubuntu=26.04&flavor=cli&kernel=edge&release=2026.11.3
+
+Only `board` is needed; the rest default to the newest release, the newest
+Ubuntu LTS, the command line image and the edge kernel. Without JavaScript the
+page lists every file of the newest release instead. Boards, the home page and
+Roxora Imager fold their details behind `<details>`, which needs no script.
+
+`tools/build.py` writes the site. The pages it generates have a module each
+(`tools/page_home.py`, `page_download.py`, `page_boards.py`, `page_imager.py`);
+`markup.py` holds the shared pieces of markup, `shell.py` the page shell and
+`docs.py` the rendering of the build repository's documents.
+
 ## Building locally
 
     pip install -r tools/requirements.txt

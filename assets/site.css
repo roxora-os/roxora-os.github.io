@@ -818,3 +818,188 @@ html.js .copy-block .pf-v6-c-code-block__pre { padding-inline-end: 5rem; }
 /* A checksum with its copy button: the 64 characters wrap. */
 .pf-v6-c-clipboard-copy.pf-m-inline { white-space: normal; padding-inline: 0; background: none; }
 .pf-v6-c-clipboard-copy.pf-m-inline .pf-v6-c-clipboard-copy__text { overflow-wrap: anywhere; word-break: break-all; font-size: 0.875em; }
+
+/* ---- Download: the chooser ---- */
+.chooser { counter-reset: step; }
+.chooser > .section:first-child { margin-top: 0; }
+/* The step's number, as the wizard of the imager draws it. A step that is
+   not shown is not counted. */
+.chooser-step .pf-v6-c-card__title-text::before, .steps > li::before {
+  counter-increment: step;
+  content: counter(step);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 1.75rem;
+  height: 1.75rem;
+  margin-inline-end: var(--pf-t--global--spacer--md);
+  border-radius: 50%;
+  background: var(--pf-t--global--color--brand--default);
+  color: var(--pf-t--global--text--color--on-brand--default, #fff);
+  font-family: var(--pf-t--global--font--family--body);
+  font-size: var(--pf-t--global--font--size--body--sm);
+  font-weight: 500;
+  vertical-align: 0.15em;
+}
+.chooser-step .pf-v6-c-card__title { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pf-t--global--spacer--xs) var(--pf-t--global--spacer--md); }
+.chooser-step .pf-v6-c-card__title-text { display: flex; align-items: center; }
+.step-lead { margin: 0 0 var(--pf-t--global--spacer--md) 0; color: var(--pf-t--global--text--color--subtle); }
+/* Once the board is chosen its step is one line: the board, and Change.
+   On a phone the board's name goes under the heading. */
+.step-summary, .step-change { display: none; }
+.is-collapsed > .pf-v6-c-card__title { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; padding-block-end: var(--pf-v6-c-card--first-child--PaddingBlockStart); }
+.is-collapsed .step-summary { display: block; grid-column: 1 / -1; grid-row: 2; min-width: 0; padding-inline-start: calc(1.75rem + var(--pf-t--global--spacer--md)); color: var(--pf-t--global--text--color--subtle); }
+.is-collapsed .step-change { display: inline-flex; grid-column: 2; grid-row: 1; }
+.is-collapsed > .pf-v6-c-card__body { display: none; }
+@media (min-width: 36rem) {
+  .is-collapsed > .pf-v6-c-card__title { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .is-collapsed .step-summary { grid-column: 2; grid-row: 1; padding-inline-start: 0; }
+  .is-collapsed .step-change { grid-column: 3; }
+}
+
+.board-search { max-width: 36rem; margin-block-end: var(--pf-t--global--spacer--md); }
+.board-search .pf-v6-c-text-input-group__text-input { min-height: 2.75rem; }
+.board-pick { display: grid; gap: var(--pf-t--global--spacer--md); }
+.vendor-select select { min-height: 2.75rem; }
+.vendor-list { display: none; }
+.vendor-list .pf-v6-c-simple-list__item-link { display: flex; justify-content: space-between; gap: var(--pf-t--global--spacer--md); cursor: pointer; }
+.vendor-count { color: var(--pf-t--global--text--color--subtle); font-variant-numeric: tabular-nums; }
+.board-table-wrap { min-width: 0; }
+.board-table .pf-m-clickable { cursor: pointer; }
+.board-table .pf-v6-c-table__check { width: 2.5rem; }
+.board-table .board-name { width: 42%; font-weight: 500; }
+.board-table .board-soc { font-weight: 400; }
+.board-table :is(td, th) { vertical-align: top; }
+.board-table .meta { margin-top: var(--pf-t--global--spacer--xs); }
+/* The SoC has a column of its own where there is room for one. */
+.board-table .board-soc-col { display: none; }
+@media (min-width: 36rem) {
+  .board-table .board-soc-col { display: table-cell; }
+  .board-name .board-soc { display: none; }
+}
+@media (min-width: 48rem) {
+  .board-pick { grid-template-columns: 13rem minmax(0, 1fr); gap: var(--pf-t--global--spacer--lg); align-items: start; }
+  .vendor-select { display: none; }
+  .vendor-list { display: block; padding-inline-end: var(--pf-t--global--spacer--md); border-inline-end: 1px solid var(--pf-t--global--border--color--default); }
+}
+
+/* Step 2: one row per choice, its name beside the buttons from sm. */
+.choice { display: grid; gap: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md); padding-block: var(--pf-t--global--spacer--sm); }
+.choice__label { font-weight: 500; }
+.choice .pf-v6-c-toggle-group { flex-wrap: wrap; row-gap: var(--pf-t--global--spacer--xs); }
+.choice .pf-v6-c-toggle-group__button { min-height: 2.75rem; align-items: center; }
+.choice .meta { margin-top: var(--pf-t--global--spacer--sm); max-width: 789px; }
+@media (max-width: 35.99rem) {
+  /* Three buttons side by side on a phone: tighter insets, not a second row. */
+  .choice .pf-v6-c-toggle-group { --pf-v6-c-toggle-group__button--PaddingInlineStart: var(--pf-t--global--spacer--sm); --pf-v6-c-toggle-group__button--PaddingInlineEnd: var(--pf-t--global--spacer--sm); }
+}
+@media (min-width: 36rem) {
+  .choice { grid-template-columns: 6rem minmax(0, 1fr); align-items: start; }
+  .choice__label { padding-block-start: 0.625rem; }
+}
+@media (min-width: 48rem) {
+  .choice .pf-v6-c-toggle-group__button { min-height: 2.25rem; }
+  .choice__label { padding-block-start: 0.375rem; }
+}
+
+/* Step 3: the file. */
+.result-name { margin: 0; font-family: var(--pf-t--global--font--family--heading); font-size: 1.25rem; line-height: 1.3; }
+.result-sub { margin: var(--pf-t--global--spacer--xs) 0 0 0; }
+.result-labels { display: inline-flex; flex-wrap: wrap; gap: var(--pf-t--global--spacer--xs); margin-inline-start: var(--pf-t--global--spacer--xs); vertical-align: middle; }
+.result > .meta { max-width: 789px; margin-block-start: var(--pf-t--global--spacer--xs); }
+.result .pf-v6-c-alert { margin-block-start: var(--pf-t--global--spacer--md); }
+.result .pf-v6-c-alert p + p { margin-block-start: var(--pf-t--global--spacer--sm); }
+.hash-line { font-size: var(--pf-t--global--font--size--body--sm); }
+.result-action { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md); margin-block: var(--pf-t--global--spacer--lg); }
+.result-size { color: var(--pf-t--global--text--color--subtle); }
+/* A link to the file itself starts a download and leaves no page, so it
+   does not carry the glyph of a link that goes elsewhere. */
+a.download-link:not(.pf-v6-c-button)::after, a.download-link .pf-v6-c-button__text::after { content: none !important; }
+@media (max-width: 35.99rem) {
+  .result-action .pf-v6-c-button, .hero-actions .pf-v6-c-button { width: 100%; justify-content: center; }
+}
+
+/* Every file of a release. From md the columns are fixed, so a file name
+   or a checksum wraps inside its own. */
+.files-about { margin: 0 0 var(--pf-t--global--spacer--md) 0; }
+@media (min-width: 62rem) {
+  .files-table { table-layout: fixed; }
+  .files-table th:nth-child(1) { width: 26%; }
+  .files-table th:nth-child(3) { width: 6.5rem; }
+  .files-table th:nth-child(4) { width: 10.5rem; }
+  .files-table td:nth-child(3) { white-space: nowrap; }
+}
+/* Stacked, a label keeps its own width in the value's column. */
+.pf-v6-c-table td > .pf-v6-c-label { justify-self: start; }
+/* Without JavaScript the list of files is the page, so it comes first. */
+.after-chooser { display: flex; flex-direction: column; }
+html:not(.js) .after-chooser > .files-section { order: -1; }
+.files-table .pf-v6-c-table__th { --pf-v6-c-table--cell--MaxWidth: none; --pf-v6-c-table--cell--MinWidth: 0; }
+.files-table .meta.hash { font-family: var(--pf-t--global--font--family--mono); font-size: var(--pf-t--global--font--size--body--sm); }
+/* A row the address names (an old link to one image) is marked. */
+.files-table tr:target { background: var(--pf-t--global--background--color--primary--hover); }
+
+/* ---- Home ---- */
+.hero { max-width: 50rem; }
+.hero-lead { margin: 0; font-size: var(--pf-t--global--font--size--body--lg); line-height: 1.6; }
+.hero-actions { display: flex; flex-wrap: wrap; gap: var(--pf-t--global--spacer--md); margin-block: var(--pf-t--global--spacer--xl); }
+.hero-status { margin: 0; color: var(--pf-t--global--text--color--subtle); }
+.hero-status .pf-v6-c-label { margin-inline-end: var(--pf-t--global--spacer--xs); }
+.home-section { margin-block-start: var(--pf-t--global--spacer--2xl); }
+.home-more { margin: var(--pf-t--global--spacer--md) 0 0 0; }
+.board-cards { --pf-v6-l-gallery--GridTemplateColumns--min: min(100%, 15rem); }
+a.board-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pf-t--global--spacer--xs);
+  padding: var(--pf-t--global--spacer--lg);
+  color: var(--pf-t--global--text--color--regular);
+  text-decoration: none;
+  transition: border-color var(--pf-t--global--motion--duration--sm, 0.2s) linear;
+}
+a.board-card:hover, a.board-card:focus-visible { --pf-v6-c-card--BorderColor: var(--pf-t--global--border--color--clicked); border-color: var(--pf-t--global--border--color--clicked); }
+.board-card__name { font-family: var(--pf-t--global--font--family--heading); font-size: 1.125rem; color: var(--pf-t--global--text--color--link--default); }
+.board-card__meta { color: var(--pf-t--global--text--color--subtle); }
+.board-card__status { margin-block-start: var(--pf-t--global--spacer--sm); }
+/* Three steps, numbered like the chooser's. */
+.steps { counter-reset: step; display: grid; gap: var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--xl); margin: 0; padding: 0; list-style: none; max-width: 76rem; }
+.steps > li { position: relative; padding-inline-start: calc(1.75rem + var(--pf-t--global--spacer--md)); min-height: 1.75rem; }
+.steps > li::before { position: absolute; inset-inline-start: 0; inset-block-start: 0; margin: 0; }
+@media (min-width: 62rem) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+/* ---- Boards: one row per board ---- */
+.board-row > .fold__toggle { min-height: 4rem; padding-block: var(--pf-t--global--spacer--md); }
+.board-row .fold__text { display: grid; gap: 2px var(--pf-t--global--spacer--lg); align-items: center; }
+.board-row__name { font-family: var(--pf-t--global--font--family--heading); font-size: 1.125rem; }
+.board-row__meta, .board-row__images { color: var(--pf-t--global--text--color--subtle); }
+.board-row__status { margin-block-start: var(--pf-t--global--spacer--xs); }
+@media (min-width: 48rem) {
+  .board-row .fold__text { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 11rem; }
+  .board-row__name { grid-column: 1; grid-row: 1; }
+  .board-row__meta { grid-column: 1; grid-row: 2; }
+  .board-row__images { grid-column: 2; grid-row: 1 / span 2; }
+  .board-row__status { grid-column: 3; grid-row: 1 / span 2; margin: 0; }
+}
+.board-images { max-width: 48rem; }
+.board-images .status-group { display: block; }
+.board-images .status-group + .status-group { margin-block-start: var(--pf-t--global--spacer--xs); }
+.board-note { max-width: 789px; margin: var(--pf-t--global--spacer--md) 0; }
+.board-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--lg); }
+
+/* ---- Roxora Imager: the packages, one block per system ---- */
+.imager-release { margin: 0 0 var(--pf-t--global--spacer--lg) 0; }
+.platforms__mine { margin: 0; font-size: var(--pf-t--global--font--size--body--sm); color: var(--pf-t--global--text--color--subtle); }
+.platforms__all { margin: var(--pf-t--global--spacer--md) 0 0 0; }
+.platforms__all .pf-v6-c-button { min-height: 2.75rem; }
+.platform { padding-block: var(--pf-t--global--spacer--md); border-block-start: 1px solid var(--pf-t--global--border--color--default); }
+.platform:last-of-type { padding-block-end: 0; }
+.platform__name { margin: 0 0 var(--pf-t--global--spacer--sm) 0; font-family: var(--pf-t--global--font--family--heading); font-size: 1.125rem; font-weight: 400; }
+.platform__arch + .platform__arch { margin-block-start: var(--pf-t--global--spacer--md); }
+.platform__arch .meta { margin-top: var(--pf-t--global--spacer--sm); }
+.platform__other { white-space: nowrap; }
+/* With the visitor's system known, only its block is shown, without the
+   rule and the name that tell the blocks apart in the full list. */
+.platforms[data-mine] .platform:not(.is-mine) { display: none; }
+.platforms[data-mine] .platform.is-mine { border-block-start: 0; padding-block: var(--pf-t--global--spacer--xs) 0; }
+.platforms[data-mine] .platform.is-mine .platform__name { font-size: 1.25rem; }
