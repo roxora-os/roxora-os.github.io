@@ -19,7 +19,7 @@
 
 Writes cache/upstream/: boards.conf, docs/*.md, releases.json, which holds
 the roxora-catalog.json of every published release, newest first,
-imager.json, the newest release of Roxora Imager (roxora-os/imager), and
+imager.json, the release of Roxora Imager (roxora-os/imager) to offer, and
 synced.json, the time of this fetch. The
 catalog format is docs/release-contract.md in roxora-os/build.
 
@@ -164,13 +164,24 @@ IMAGER_DOWNLOAD = "https://github.com/%s/releases/download/" % IMAGER
 
 
 def imager_release():
-    """The newest published release of Roxora Imager, pre-releases
-    included, with only the assets that download from its own releases.
-    None when there is no release yet."""
+    """Roxora Imager's release to offer: the newest release that is not a
+    pre-release, or before there is one the newest pre-release. A
+    pre-release newer than the release offered rides along as "beta", so
+    the page can mention it. Only assets that download from its own
+    releases are kept. None when there is no release yet."""
     batch = get_json("https://api.github.com/repos/%s/releases?per_page=20" % IMAGER, api=True)
-    rel = next((r for r in batch if not r.get("draft")), None)
-    if rel is None:
+    published = [r for r in batch if not r.get("draft")]
+    if not published:
         return None
+    stable = next((r for r in published if not r.get("prerelease")), None)
+    chosen = stable or published[0]
+    out = imager_entry(chosen)
+    if stable is not None and published[0] is not stable:
+        out["beta"] = imager_entry(published[0])
+    return out
+
+
+def imager_entry(rel):
     assets = []
     for a in rel.get("assets", []):
         url = a.get("browser_download_url", "")
@@ -233,7 +244,8 @@ def main(argv):
         encoding="utf-8")
     imager = imager_release()
     (OUT / "imager.json").write_text(json.dumps(imager, indent=1) + "\n", encoding="utf-8")
-    print("imager: %s" % (imager["tag"] if imager else "no release"))
+    print("imager: %s%s" % (imager["tag"] if imager else "no release",
+                            ", beta %s" % imager["beta"]["tag"] if imager and imager.get("beta") else ""))
     (OUT / "releases.json").write_text(
         json.dumps(cats, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
 
