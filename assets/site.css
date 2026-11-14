@@ -87,8 +87,9 @@
   --roxora-accent--clicked: #c4f0df;
 }
 /* Primary buttons take the bright green with near-black text in both
-   themes, at every size. */
-.pf-v6-c-button, .pf-v6-c-button.pf-m-display-lg {
+   themes, at every size. :root raises the rule above the button's own,
+   which a bundler may place after this file. */
+:root .pf-v6-c-button, :root .pf-v6-c-button.pf-m-display-lg {
   --pf-v6-c-button--m-primary--BackgroundColor: var(--roxora-accent);
   --pf-v6-c-button--m-primary--Color: var(--roxora-on-accent);
   --pf-v6-c-button--m-primary--hover--BackgroundColor: var(--roxora-accent--hover);
