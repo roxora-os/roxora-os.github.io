@@ -443,8 +443,6 @@ a[href^="mailto:"]:not(:where(.pf-v6-c-nav__link))::after,
 
 /* ---- cards ---- */
 .pf-v6-l-gallery { --pf-v6-l-gallery--GridTemplateColumns--min: min(100%, 25rem); }
-/* Overview cards: Cockpit's gallery, as many columns as fit at 26rem each. */
-.home-cards { --pf-v6-l-gallery--GridTemplateColumns--min: min(100%, 24rem); }
 .pf-v6-c-card { --pf-v6-c-card--first-child--PaddingBlockStart: var(--pf-t--global--spacer--xl); --pf-v6-c-card--child--PaddingInlineStart: var(--pf-t--global--spacer--xl); --pf-v6-c-card--child--PaddingInlineEnd: var(--pf-t--global--spacer--xl); --pf-v6-c-card--last-child--PaddingBlockEnd: var(--pf-t--global--spacer--xl); }
 .pf-v6-c-card__title-text { font-weight: 400; font-size: 1.375rem; line-height: 1.3; }
 .pf-v6-c-card__body { font-size: 1rem; line-height: 1.5; }
@@ -824,7 +822,7 @@ html.js .copy-block .pf-v6-c-code-block__pre { padding-inline-end: 5rem; }
 .chooser > .section:first-child { margin-top: 0; }
 /* The step's number, as the wizard of the imager draws it. A step that is
    not shown is not counted. */
-.chooser-step .pf-v6-c-card__title-text::before, .steps > li::before {
+.chooser-step .pf-v6-c-card__title-text::before, .home-step .pf-v6-c-card__title-text::before {
   counter-increment: step;
   content: counter(step);
   display: inline-flex;
@@ -917,7 +915,7 @@ html.js .copy-block .pf-v6-c-code-block__pre { padding-inline-end: 5rem; }
    does not carry the glyph of a link that goes elsewhere. */
 a.download-link:not(.pf-v6-c-button)::after, a.download-link .pf-v6-c-button__text::after { content: none !important; }
 @media (max-width: 35.99rem) {
-  .result-action .pf-v6-c-button, .hero-actions .pf-v6-c-button { width: 100%; justify-content: center; }
+  .result-action .pf-v6-c-button { width: 100%; justify-content: center; }
 }
 
 /* Every file of a release. From md the columns are fixed, so a file name
@@ -940,33 +938,79 @@ html:not(.js) .after-chooser > .files-section { order: -1; }
 /* A row the address names (an old link to one image) is marked. */
 .files-table tr:target { background: var(--pf-t--global--background--color--primary--hover); }
 
-/* ---- Home ---- */
-.hero { max-width: 50rem; }
-.hero-lead { margin: 0; font-size: var(--pf-t--global--font--size--body--lg); line-height: 1.6; }
-.hero-actions { display: flex; flex-wrap: wrap; gap: var(--pf-t--global--spacer--md); margin-block: var(--pf-t--global--spacer--xl); }
-.hero-status { margin: 0; color: var(--pf-t--global--text--color--subtle); }
-.hero-status .pf-v6-c-label { margin-inline-end: var(--pf-t--global--spacer--xs); }
-.home-section { margin-block-start: var(--pf-t--global--spacer--2xl); }
-.home-more { margin: var(--pf-t--global--spacer--md) 0 0 0; }
-.board-cards { --pf-v6-l-gallery--GridTemplateColumns--min: min(100%, 15rem); }
-a.board-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--pf-t--global--spacer--xs);
-  padding: var(--pf-t--global--spacer--lg);
-  color: var(--pf-t--global--text--color--regular);
-  text-decoration: none;
-  transition: border-color var(--pf-t--global--motion--duration--sm, 0.2s) linear;
+/* ---- Home: a landing page ----
+   No sidebar on a wide screen and no page head: a Hero (PatternFly's
+   component for home and product landing pages), then one page section per
+   part, all in the same 76rem column as the other pages' content. */
+.home-page { --pf-v6-c-page--section--m-limit-width--MaxWidth: 76rem; }
+.home-page .pf-v6-c-page__main-section.pf-m-limit-width > .pf-v6-c-page__main-body { margin-inline: auto; }
+/* The footer keeps to the same column, so on a wide screen its edges line
+   up with the content's rather than with the window's. */
+.home-page > :is(.site-footer, .foot-legal) > .pf-v6-c-page__main-body { box-sizing: border-box; width: 100%; max-width: 76rem; margin-inline: auto; }
+.home-page > .pf-v6-c-page__main-section.home-sheet { --pf-v6-c-page__main-section--PaddingBlockStart: var(--pf-t--global--spacer--xl); --pf-v6-c-page__main-section--PaddingBlockEnd: var(--pf-t--global--spacer--3xl); }
+.home-part + .home-part { margin-block-start: var(--pf-t--global--spacer--2xl); }
+.home-part--hero + .home-part { margin-block-start: var(--pf-t--global--spacer--lg); }
+
+/* The Hero's brand asset is the large mark of the Facet wallpaper, light
+   or dark with the theme, at the right as the Hero guidelines place it. It
+   is dropped on a phone, where the text needs the whole width. */
+.home-hero {
+  --pf-v6-c-hero--BackgroundImage--light: url("/assets/brand/hero-facet-light.svg");
+  --pf-v6-c-hero--BackgroundImage--dark: url("/assets/brand/hero-facet-dark.svg");
+  --pf-v6-c-hero--PaddingInlineStart: var(--pf-t--global--spacer--lg);
+  --pf-v6-c-hero--PaddingInlineEnd: var(--pf-t--global--spacer--lg);
+  --pf-v6-c-hero--PaddingBlockStart: var(--pf-t--global--spacer--xl);
+  --pf-v6-c-hero--PaddingBlockEnd: var(--pf-t--global--spacer--xl);
+  --pf-v6-c-hero--BorderStartEndRadius: var(--pf-t--global--border--radius--large);
+  --pf-v6-c-hero--BorderEndStartRadius: var(--pf-t--global--border--radius--large);
+  --pf-v6-c-hero__body--MaxWidth: 100%;
+  /* The wallpaper's own ground, so the mark sits on it as on the desktop. */
+  --pf-v6-c-hero--BackgroundColor: #eef3f1;
 }
-a.board-card:hover, a.board-card:focus-visible { --pf-v6-c-card--BorderColor: var(--pf-t--global--border--color--clicked); border-color: var(--pf-t--global--border--color--clicked); }
-.board-card__name { font-family: var(--pf-t--global--font--family--heading); font-size: 1.125rem; color: var(--pf-t--global--text--color--link--default); }
-.board-card__meta { color: var(--pf-t--global--text--color--subtle); }
-.board-card__status { margin-block-start: var(--pf-t--global--spacer--sm); }
-/* Three steps, numbered like the chooser's. */
-.steps { counter-reset: step; display: grid; gap: var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--xl); margin: 0; padding: 0; list-style: none; max-width: 76rem; }
-.steps > li { position: relative; padding-inline-start: calc(1.75rem + var(--pf-t--global--spacer--md)); min-height: 1.75rem; }
-.steps > li::before { position: absolute; inset-inline-start: 0; inset-block-start: 0; margin: 0; }
-@media (min-width: 62rem) { .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+html.pf-v6-theme-dark .home-hero { --pf-v6-c-hero--BackgroundColor: #12171a; }
+@media (max-width: 47.99rem) {
+  .home-hero { --pf-v6-c-hero--BackgroundImage--light: none; --pf-v6-c-hero--BackgroundImage--dark: none; }
+}
+@media (min-width: 48rem) {
+  .home-hero {
+    --pf-v6-c-hero--PaddingInlineStart: var(--pf-t--global--spacer--3xl);
+    --pf-v6-c-hero--PaddingInlineEnd: var(--pf-t--global--spacer--3xl);
+    --pf-v6-c-hero--PaddingBlockStart: var(--pf-t--global--spacer--3xl);
+    --pf-v6-c-hero--PaddingBlockEnd: var(--pf-t--global--spacer--3xl);
+    --pf-v6-c-hero--BorderStartEndRadius: 48px;
+    --pf-v6-c-hero--BorderEndStartRadius: 48px;
+    --pf-v6-c-hero__body--MaxWidth: 70%;
+  }
+}
+.home-hero__title { margin: 0; font-weight: 400; }
+/* Measurements from the Hero guidelines: 16px from the headline to the
+   text, 32px to the actions, 16px between the actions. */
+.home-hero__text { margin: var(--pf-t--global--spacer--md) 0 0 0; max-width: 40rem; font-size: var(--pf-t--global--font--size--body--lg); line-height: 1.6; }
+.home-hero__actions { display: flex; flex-wrap: wrap; gap: var(--pf-t--global--spacer--md); margin-block-start: var(--pf-t--global--spacer--xl); }
+@media (max-width: 35.99rem) {
+  .home-hero__actions .pf-v6-c-button { width: 100%; justify-content: center; }
+}
+
+/* A section's name, with the link to the page that has the rest at the
+   other end of the row. */
+.home-section__head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--lg); margin-block-end: var(--pf-t--global--spacer--lg); }
+.home-section__head .pf-v6-c-title { margin: 0; font-weight: 400; }
+
+/* The newest release: terms over values, side by side from md. */
+/* Four short values: two to a row on a phone, all four from a tablet up. */
+.home-release {
+  --pf-v6-c-description-list--RowGap: var(--pf-t--global--spacer--lg);
+  --pf-v6-c-description-list--ColumnGap: var(--pf-t--global--spacer--lg);
+  --pf-v6-c-description-list--GridTemplateColumns--min: 7.5rem;
+}
+.home-release .pf-v6-c-description-list__text { font-size: 1rem; }
+
+/* Boards: clickable cards of one height in each row. */
+.board-card .pf-v6-c-card__footer { color: var(--pf-t--global--text--color--subtle); }
+
+/* Install: three cards numbered like the Download chooser's steps. */
+.home-steps { counter-reset: step; }
+.home-step .pf-v6-c-card__title { display: flex; align-items: center; }
 
 /* ---- Boards: one row per board ---- */
 .board-row > .fold__toggle { min-height: 4rem; padding-block: var(--pf-t--global--spacer--md); }

@@ -114,8 +114,11 @@
     }
   }
   if (sidebar && navToggle) {
-    setSidebar(wide.matches);
-    wide.addEventListener('change', function (e) { setSidebar(e.matches); });
+    // A landing page (the home page) starts with the sidebar folded on a
+    // wide screen too; the toggle opens it as anywhere else.
+    var wideOpen = !sidebar.hasAttribute('data-wide-closed');
+    setSidebar(wide.matches && wideOpen);
+    wide.addEventListener('change', function (e) { setSidebar(e.matches && wideOpen); });
     navToggle.addEventListener('click', function () {
       // From xl the sidebar is a column of the page grid, so collapsing it
       // resizes the content beside it; below xl PatternFly slides it in over

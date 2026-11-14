@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1502" height="2544" viewBox="2338 -58 1502 2544">
+<!-- The large mark of the Facet wallpaper (light), cropped at its right edge.
+     Roxora wallpapers by DavidQyn and Ga Hing Woo, CC BY-SA 4.0:
+     https://github.com/roxora-os/design/tree/main/wallpapers -->
+<clipPath id="g"><polygon points="3490,-58 4642,614 4450,2054 3490,2486 2530,2054 2338,614"/></clipPath>
+<g clip-path="url(#g)"><rect x="2050" y="-250" width="2880" height="1056" fill="#E1ECE8"/><rect x="2050" y="902" width="2880" height="720" fill="#D9E6E1"/><rect x="2050" y="1718" width="2880" height="960" fill="#D2E0DA"/></g>
+</svg>

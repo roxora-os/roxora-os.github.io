@@ -61,7 +61,7 @@ from markup import (AUTHOR, AUTHOR_CODE, BUILD_REPO, CONTENT, EMAIL, IMAGER_REPO
                     NAME, OS_LIST_URL, ROOT, SITE, SOURCE, TAGLINE, UPSTREAM, and_list, esc,
                     link, nobreak)
 from shell import (FOOTER_DOCS, FOOTER_PAGES, SHELL, SITE_PAGES, cards, foot_links,  # noqa: E402
-                   page_head, render_nav, render_rail, search_records)
+                   doc_section, page_head, render_nav, render_rail, search_records)
 
 
 # Scripts only one page needs, after site.js.
@@ -248,6 +248,7 @@ def build():
         json.dumps(records, separators=(",", ":"), ensure_ascii=False), encoding="utf-8")
 
     def render(directory, current, heading, subtitle, description, action, body):
+        home = directory == ""
         rail = cards(body)
         href = "/" + (directory + "/" if directory else "")
         out = SHELL % dict(
@@ -260,13 +261,19 @@ def build():
             site_js="/assets/site.js", aboutrows=aboutrows,
             page_js="".join('<script src="%s"></script>\n' % src
                             for src in PAGE_SCRIPTS.get(directory, [])),
-            heading=esc(heading),
             noindex='<meta name="robots" content="noindex">\n' if (sample or directory == "404") else "",
-            head=page_head(heading, subtitle, action),
-            nav=render_nav(current, have), rail=render_rail(rail),
-            railcls=" with-rail" if rail else "",
-            content=nobreak(body),
-            download_btn="" if directory == "download" else (
+            nav=render_nav(current, have),
+            # The home page is a landing page: its sections are its own, it
+            # has no page head, and the sidebar starts folded on a wide
+            # screen (the masthead toggle still opens it). Its first screen
+            # carries Download, so the masthead does not repeat it.
+            sections=nobreak(body) if home else doc_section(
+                esc(heading), render_rail(rail), page_head(heading, subtitle, action),
+                nobreak(body)),
+            maincls="home-page" if home else "doc-page" + (" with-rail" if rail else ""),
+            sidebarcls=" pf-m-collapsed" if home else "",
+            sidebarattrs=" data-wide-closed" if home else "",
+            download_btn="" if directory in ("download", "") else (
                 '      <a class="pf-v6-c-button pf-m-primary masthead-give" href="/download/">'
                 '<span class="pf-v6-c-button__text">Download</span></a>\n'),
             foot_pages=foot_links([(label, href) for label, href in FOOTER_PAGES if href in have]),

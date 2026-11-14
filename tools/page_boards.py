@@ -129,18 +129,26 @@ def render(boards, downloadable):
 
 
 def home_cards(boards, downloadable):
-    """The boards as compact cards for the home page, each a link to its
-    download (or to its row on the Boards page before it has one)."""
+    """The boards as PatternFly clickable cards for the home page: the whole
+    card is one link, to the board's download (or to its row on the Boards
+    page before it has one)."""
     cards = []
     for board, rows in group(boards).items():
         b = rows[0]
         href = "/download/?board=%s" % board if board in downloadable else "/boards/#%s" % board
+        tid = "board-card-%s" % board
         cards.append(
-            '<a class="pf-v6-c-card pf-m-compact board-card" href="%s">'
-            '<span class="board-card__name">%s</span>'
-            '<span class="board-card__meta">%s, %s</span>'
-            '<span class="board-card__meta">Ubuntu %s</span>'
-            '<span class="board-card__status">%s</span></a>'
-            % (href, esc(b["name"]), esc(b["soc"].upper()), esc(b["vendor"]),
-               esc(versions(rows)), tested_summary(r["status"] for r in rows)))
-    return '<div class="pf-v6-l-gallery pf-m-gutter board-cards">%s</div>' % "\n".join(cards)
+            '<div class="pf-v6-l-grid__item"><div class="pf-v6-c-card pf-m-clickable pf-m-full-height board-card">'
+            '<div class="pf-v6-c-card__header"><div class="pf-v6-c-card__actions pf-m-no-offset">'
+            '<div class="pf-v6-c-card__selectable-actions">'
+            '<a class="pf-v6-c-card__clickable-action" href="%s" aria-labelledby="%s"></a>'
+            '</div></div><div class="pf-v6-c-card__header-main"><div class="pf-v6-c-card__title">'
+            '<h3 class="pf-v6-c-card__title-text" id="%s">%s</h3></div></div></div>'
+            '<div class="pf-v6-c-card__body">%s, %s</div>'
+            '<div class="pf-v6-c-card__footer">Ubuntu %s</div></div></div>'
+            % (href, tid, tid, esc(b["name"]), esc(b["soc"].upper()), esc(b["vendor"]),
+               esc(versions(rows))))
+    # Three to a row from lg, two from md: the rows stay even and a short
+    # list does not leave an empty column on a wide screen, as a gallery would.
+    return ('<div class="pf-v6-l-grid pf-m-gutter pf-m-all-6-col-on-md pf-m-all-4-col-on-lg board-cards">'
+            '%s</div>' % "\n".join(cards))

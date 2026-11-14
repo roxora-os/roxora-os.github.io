@@ -266,7 +266,7 @@ SHELL = """<!DOCTYPE html>
 %(download_btn)s    </div>
   </header>
   <div class="pf-v6-c-backdrop site-backdrop" id="site-backdrop" hidden></div>
-  <aside class="pf-v6-c-page__sidebar" id="site-sidebar">
+  <aside class="pf-v6-c-page__sidebar%(sidebarcls)s" id="site-sidebar"%(sidebarattrs)s>
     <div class="pf-v6-c-page__sidebar-main">
       <div class="pf-v6-c-page__sidebar-body pf-m-page-insets">
         <nav class="pf-v6-c-nav" aria-label="Site">
@@ -276,15 +276,8 @@ SHELL = """<!DOCTYPE html>
     </div>
   </aside>
   <div class="pf-v6-c-page__main-container" tabindex="-1">
-    <main class="pf-v6-c-page__main doc-page%(railcls)s" tabindex="-1" id="main-content">
-      <section class="pf-v6-c-page__main-section pf-m-limit-width" aria-label="%(heading)s">
-        <div class="pf-v6-c-page__main-body">
-%(rail)s          <div class="page-content">
-%(head)s%(content)s
-
-          </div>
-        </div>
-      </section>
+    <main class="pf-v6-c-page__main %(maincls)s" tabindex="-1" id="main-content">
+%(sections)s
 
       <footer class="pf-v6-c-page__main-section site-footer">
         <div class="pf-v6-c-page__main-body">
@@ -383,6 +376,18 @@ SHELL = """<!DOCTYPE html>
 %(page_js)s</body>
 </html>
 """
+
+
+def doc_section(heading, rail, head, content):
+    """The one section of an ordinary page: the page head, the content, and
+    the "on this page" rail beside them when there is one."""
+    return ('      <section class="pf-v6-c-page__main-section pf-m-limit-width" aria-label="%s">\n'
+            '        <div class="pf-v6-c-page__main-body">\n'
+            '%s          <div class="page-content">\n'
+            '%s%s\n\n'
+            '          </div>\n'
+            '        </div>\n'
+            '      </section>\n' % (heading, rail, head, content))
 
 
 def page_head(heading, subtitle, action):
