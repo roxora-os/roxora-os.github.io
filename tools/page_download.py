@@ -264,7 +264,7 @@ def result_step():
     in_parts = (
         '<div class="result-parts" id="dl-parts" hidden>\n'
         '<p>This image is larger than GitHub takes as one file, so the release has it in '
-        '<span id="dl-parts-count"></span> parts. %s newer than 0.1.4 downloads them, joins '
+        '<span id="dl-parts-count"></span> parts. %s 0.1.5 and later downloads them, joins '
         'them and checks the result. To do it by hand, download every part into one '
         'directory:</p>\n'
         '<ol class="parts-list" id="dl-parts-list"></ol>\n'
