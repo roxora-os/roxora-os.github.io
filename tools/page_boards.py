@@ -114,8 +114,9 @@ def render(boards, downloadable):
          "desktop, Firefox and the basic tools), the other the full "
          "<code>ubuntu-desktop</code> with the office and media applications."),
         ("Kernel", "Armbian's kernel branch. <code>edge</code> follows recent mainline "
-         "kernels; <code>vendor</code> is Rockchip's own kernel (Linux 6.1), offered for the "
-         "UEFI image."),
+         "kernels and is the default; <code>vendor</code> is Rockchip's own kernel (Linux "
+         "6.1), for what only that kernel drives. %s" % link(
+             "/faq/#which-kernel-do-the-images-use", "Which kernel to pick")),
         ("Source", "This list is %s in the build repository." % link(
             BUILD_REPO + "/blob/main/boards.conf", "boards.conf")),
     ]), rail=False))
